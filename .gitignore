@@ -1,0 +1,115 @@
+# Java
+# Ignoriere Build-Output-Verzeichnisse
+*/target/
+
+# Maven
+# Ignoriere Maven-Backup- und Release-Dateien
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# IntelliJ IDEA
+# Ignoriere IntelliJ IDEA-Projektdateien und Verzeichnisse
+.idea/
+*.iml
+*.ipr
+
+# Eclipse
+# Ignoriere Eclipse-Projektdateien und Verzeichnisse
+.classpath
+.project
+.settings/
+
+# NetBeans
+# Ignoriere NetBeans-Projektdateien und Verzeichnisse
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# VS Code
+# Ignoriere VS Code-Projektdateien und Verzeichnisse
+.vscode/
+
+# Betriebssystem-spezifische Dateien
+# Ignoriere macOS-Dateien
+.DS_Store
+
+# Ignoriere Windows-Dateien
+Thumbs.db
+ehthumbs.db
+
+# Ignoriere Linux-Backup-Dateien
+*~
+
+# Docker
+# Ignoriere Docker-Umgebungsdateien
+docker-compose.override.yml
+
+# Ignoriere Log-Dateien und temporäre Dateien, die in Docker-Containern erstellt werden
+**/*.log
+**/logs/
+*.log
+
+# Ignoriere Build-Verzeichnisse in Docker
+/build/
+
+# Ignoriere Datenbankdaten
+# MariaDB-Datenbankverzeichnisse und Dateien
+mariadb/mariadb_data/*
+
+# Ignoriere sensitive Dateien
+# Mosquitto Passwortdatei
+mosquitto/config/passwordfile
+# Mosquitto Datenbankdateien und Logs
+mosquitto/data/
+mosquitto/log/
+
+# Frontend
+# Ignoriere Node.js- und npm-spezifische Dateien und Verzeichnisse
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ignoriere Build-Output-Verzeichnisse
+/dist/
+.build/
+
+# Ignoriere temporäre Dateien und Verzeichnisse
+/tmp/
+.temp/
+
+# Ignoriere Cache-Verzeichnisse und Dateien
+.cache/
+.pnpm-store/
+
+# Bootstrap
+# Ignoriere Bootstrap-Build-Output
+/bootstrap/
+
+# Logs
+# Ignoriere generische Log-Dateien
+*.log
+
+# Weitere generische Ausschlüsse
+# Ignoriere temporäre Dateien
+*.swp
+*.bak
+*.tmp
+*.old
+
+# Ignoriere IDE- und Editor-Konfigurationsdateien
+*.idea/
+*.vscode/
+*.code-workspace
+
+# PlatformIO
+# Ignoriere PlatformIO-Projektdateien
+/esp32/.pio/
+/esp32/.vscode/
+/esp32/.idea/
+/esp32/.clangd/

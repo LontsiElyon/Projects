@@ -1,0 +1,86 @@
+
+services:
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"  # Standard MQTT port
+      - "9001:9001"  # Websocket port
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+      - ./mosquitto/config/entrypoint.sh:/docker-entrypoint.sh
+    entrypoint: /docker-entrypoint.sh
+    environment:
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+    restart: unless-stopped
+
+  mariadb:
+    container_name: mariadb
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./mariadb/mariadb_init:/docker-entrypoint-initdb.d
+      - ./mariadb/mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+
+  java-backend:
+    container_name: java-backend
+    image: java-backend:latest
+    build:
+      context: ./java-backend   # Pfad zum Verzeichnis des Dockerfile des Java-Backends
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"             # Port für die REST-API
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 1883
+      MQTT_USERNAME: ${MQTT_USERNAME}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+    depends_on:
+      - mosquitto
+      - mariadb
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mariadb
+      MYSQL_ROOT_PASSWORD: simon1234!
+    ports:
+      - "8081:80"
+    depends_on:
+      - mariadb
+    restart: unless-stopped
+
+
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d    # Stelle sicher, dass die Konfigurationsdatei vorhanden ist
+      - ./frontend:/usr/share/nginx/html    # Frontend-Verzeichnis als Volume
+    ports:
+      - "80:80"    # HTTP
+      - "443:443"  # HTTPS (konfiguriere SSL entsprechend)
+    depends_on:
+      - java-backend
+    restart: unless-stopped
+
+networks:
+  default:
+    name: simon-network

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simon Game API Test</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f2f2f2;
+        color: #333;
+      }
+      .thm-green {
+        background-color: #64a12d;
+        color: #fff;
+      }
+      .thm-dark-green {
+        background-color: #30572d;
+        color: #fff;
+      }
+      .thm-light-green {
+        background-color: #c8dba7;
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="text-center thm-dark-green p-3">Simon Game API Test</h1>
+
+      <div class="card thm-light-green mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Create Object</h5>
+          <form id="create-form">
+            <div class="mb-3">
+              <label for="create-message" class="form-label">Message</label>
+              <input
+                type="text"
+                class="form-control"
+                id="create-message"
+                required
+              />
+            </div>
+            <button type="submit" class="btn thm-green">Create</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card thm-light-green mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Update Object</h5>
+          <form id="update-form">
+            <div class="mb-3">
+              <label for="update-id" class="form-label">ID</label>
+              <input
+                type="number"
+                class="form-control"
+                id="update-id"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="update-message" class="form-label">Message</label>
+              <input
+                type="text"
+                class="form-control"
+                id="update-message"
+                required
+              />
+            </div>
+            <button type="submit" class="btn thm-green">Update</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card thm-light-green mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Delete Object</h5>
+          <form id="delete-form">
+            <div class="mb-3">
+              <label for="delete-id" class="form-label">ID</label>
+              <input
+                type="number"
+                class="form-control"
+                id="delete-id"
+                required
+              />
+            </div>
+            <button type="submit" class="btn thm-green">Delete</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card thm-light-green">
+        <div class="card-body">
+          <h5 class="card-title">Objects</h5>
+          <button class="btn thm-green mb-3" id="fetch-objects">
+            Fetch Objects
+          </button>
+          <ul id="objects-list" class="list-group"></ul>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("create-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const message = document.getElementById("create-message").value;
+
+          fetch("/api/create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain",
+            },
+            body: message,
+          })
+            .then((response) => response.text())
+            .then((data) => alert(data))
+            .catch((error) => console.error("Error:", error));
+        });
+
+      document
+        .getElementById("update-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const id = document.getElementById("update-id").value;
+          const message = document.getElementById("update-message").value;
+
+          fetch(`/api/update/${id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "text/plain",
+            },
+            body: message,
+          })
+            .then((response) => response.text())
+            .then((data) => alert(data))
+            .catch((error) => console.error("Error:", error));
+        });
+
+      document
+        .getElementById("delete-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const id = document.getElementById("delete-id").value;
+
+          fetch(`/api/delete/${id}`, {
+            method: "DELETE",
+          })
+            .then((response) => response.text())
+            .then((data) => alert(data))
+            .catch((error) => console.error("Error:", error));
+        });
+
+      document
+        .getElementById("fetch-objects")
+        .addEventListener("click", function () {
+          fetch("/api/objects")
+            .then((response) => response.json())
+            .then((data) => {
+              const objectsList = document.getElementById("objects-list");
+              objectsList.innerHTML = "";
+              data.forEach((object) => {
+                const listItem = document.createElement("li");
+                listItem.className = "list-group-item";
+                listItem.textContent = `ID: ${object.id}, Message: ${object.message}, Created At: ${object.created_at}`;
+                objectsList.appendChild(listItem);
+              });
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+    </script>
+  </body>
+</html>

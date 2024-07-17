@@ -1,0 +1,72 @@
+/your-project-root
+│
+├── docker-compose.yml           # Docker-Compose-Konfigurationsdatei
+│
+├── nginx                        # Nginx-bezogene Konfigurationsdateien
+│   ├── conf.d                   # Nginx-Konfigurationsverzeichnis
+│   │   └── default.conf         # Nginx-Konfigurationsdatei
+│   └── html                     # (Optional) Für statische HTML-Dateien, falls verwendet
+│
+├── java-backend                 # Java Backend-Quellcode und Docker-Konfiguration
+│   ├── src                      # Quellcode für das Java Backend
+│   ├── build.gradle             # Gradle Build-Skript
+│   ├── settings.gradle          # Gradle Settings-Datei
+│   ├── gradlew                  # Gradle Wrapper
+│   ├── gradlew.bat              # Gradle Wrapper für Windows
+│   ├── gradle                   # Gradle Wrapper Verzeichnis
+│   └── Dockerfile               # Dockerfile für das Java Backend
+│
+├── frontend                     # Frontend-Quellcode
+│   ├── index.html               # Startseite des Frontends
+│   ├── app.js                   # JavaScript-Datei für Frontend-Logik
+│   └── styles.css               # CSS-Datei für das Styling des Frontends
+│
+├── mosquitto                    # Mosquitto MQTT Broker-Konfiguration
+│   ├── config                   # Konfigurationsdateien für Mosquitto
+│   ├── data                     # Datenverzeichnis für Mosquitto
+│   └── log                      # Log-Verzeichnis für Mosquitto
+│
+└── mariadb_data                 # Datenverzeichnis für MariaDB
+
+
+Netzwerk-Name: simon-network  # Wenn das Netzwerk nicht existiert, erstelle es mit `docker network create simon-network`
+
+
+Mosquitto sose24 -> informatik
+
+
+FORK!
+
+.gitignore!
+Prompt:
+Erzeuge mir eine passende .gitignore mit vielen Kommentaren zu folgendem Tech-Stack: 
+Frondend auf Basis von HTML, CSS und JavaScript / TypeScript. Vermutlich wird Bootstraps verwendet. 
+Backend auf Basis von Java, mit Einsatz von Vertx als REST-API, MQTT-Controller und Datenbankanbindung.
+MariaDB als Datenbank.
+Mosquitto als MQTT-Broker.
+NGINX als Reverse-Proxy.
+Docker und Docker-Compose für die Containerisierung.
+PlatformIO für die Entwicklung eines Hardwarecontrollers auf Basis eines ESP32 Moduls.
+Visual Studio Code als Entwicklungsumgebung.
+
+Kommentare!
+Anleitung (docker install + docker compose etc.)
+
+Tech-Stack: 
+
+Frontend: HTML, CSS, JavaScript/TypeScript, Bootstrap
+Backend: Java, Vert.x, MariaDB
+MQTT: Mosquitto
+Reverse-Proxy: NGINX
+Containerisierung: Docker, Docker-Compose
+Hardwarecontroller: ESP32 mit PlatformIO
+Entwicklungsumgebung: Visual Studio Code
+
+
+
+
+
+       MqttClientOptions options = new MqttClientOptions()
+                .setAutoKeepAlive(true)
+                .setUsername("sose24")
+                .setPassword("informatik");
