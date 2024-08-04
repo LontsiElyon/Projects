@@ -3,17 +3,20 @@
 #include <PubSubClient.h>
 
 // WiFi settings
-const char *ssid = "SmartFactoryLab";     // TODO: Change to your WiFi SSID
-const char *password = "smartfactorylab"; // TODO: Change to your WiFi Password
+const char *ssid = "Lovro's Pixel 7 Pro";     // TODO: Change to your WiFi SSID
+const char *password = "123456789"; // TODO: Change to your WiFi Password
 
 // MQTT settings
-const char *mqtt_server = "192.168.50.206"; // Laptop IP Address
+const char *mqtt_server = "192.168.76.5"; // Laptop IP Address
 const int mqtt_port = 1883;
 const char *mqtt_user = "sose24";
 const char *mqtt_password = "informatik";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+// ID Global Variable
+String ssid1;
 
 void setup_wifi()
 {
@@ -45,8 +48,7 @@ void reconnect()
     {
       Serial.println("connected");
     }
-    else
-    {
+    else{
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
@@ -60,6 +62,14 @@ void setup()
   Serial.begin(115200);
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
+
+  // Generate a unique ID for the device
+  char ssid[23];
+  snprintf(ssid, sizeof(ssid), "Controller-%llX", ESP.getEfuseMac());
+  ssid1 = String(ssid);  // Assign the result to ssid
+
+  Serial.print("Device ID: ");
+  Serial.println(ssid1);
 }
 
 void loop()
@@ -70,8 +80,8 @@ void loop()
   }
   client.loop();
 
-  // Example payload
-  String payload = "{\"message\": \"Hello from ESP32\"}";
-  client.publish("simon/game", payload.c_str());
+  // ID status
+  String payload = "{\"status\": \"online\"}";
+  client.publish(ssid1.c_str(), payload.c_str());
   delay(2000); // Publish every 2 seconds
 }

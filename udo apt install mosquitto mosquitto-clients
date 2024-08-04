@@ -1,0 +1,400 @@
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has begun execution[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has begun execution.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3463.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: [0;1;39m[0;1;31m[0;1;39mmosquitto.service: Main process exited, code=exited, status=1/FAILURE[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit process exited[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAn ExecStart= process belonging to unit mosquitto.service has exited.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe process' exit code is 'exited' and its exit status is 1.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3463 and the job result is failed.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 1.
+[0;38;5;245m░░ [0m[0;32mSubject: Automatic restarting of a unit has been scheduled[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAutomatic restarting of the unit mosquitto.service has been scheduled, as the result for[0m
+[0;38;5;245m░░[0m [0;32mthe configured Restart= setting for the unit.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has begun execution[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has begun execution.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3557.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: [0;1;39m[0;1;31m[0;1;39mmosquitto.service: Main process exited, code=exited, status=1/FAILURE[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit process exited[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAn ExecStart= process belonging to unit mosquitto.service has exited.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe process' exit code is 'exited' and its exit status is 1.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3557 and the job result is failed.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 2.
+[0;38;5;245m░░ [0m[0;32mSubject: Automatic restarting of a unit has been scheduled[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAutomatic restarting of the unit mosquitto.service has been scheduled, as the result for[0m
+[0;38;5;245m░░[0m [0;32mthe configured Restart= setting for the unit.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has begun execution[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has begun execution.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3651.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: [0;1;39m[0;1;31m[0;1;39mmosquitto.service: Main process exited, code=exited, status=1/FAILURE[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit process exited[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAn ExecStart= process belonging to unit mosquitto.service has exited.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe process' exit code is 'exited' and its exit status is 1.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:51:25 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3651 and the job result is failed.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 3.
+[0;38;5;245m░░ [0m[0;32mSubject: Automatic restarting of a unit has been scheduled[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAutomatic restarting of the unit mosquitto.service has been scheduled, as the result for[0m
+[0;38;5;245m░░[0m [0;32mthe configured Restart= setting for the unit.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has begun execution[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has begun execution.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3745.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: [0;1;39m[0;1;31m[0;1;39mmosquitto.service: Main process exited, code=exited, status=1/FAILURE[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit process exited[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAn ExecStart= process belonging to unit mosquitto.service has exited.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe process' exit code is 'exited' and its exit status is 1.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3745 and the job result is failed.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 4.
+[0;38;5;245m░░ [0m[0;32mSubject: Automatic restarting of a unit has been scheduled[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAutomatic restarting of the unit mosquitto.service has been scheduled, as the result for[0m
+[0;38;5;245m░░[0m [0;32mthe configured Restart= setting for the unit.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has begun execution[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has begun execution.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3839.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: [0;1;39m[0;1;31m[0;1;39mmosquitto.service: Main process exited, code=exited, status=1/FAILURE[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit process exited[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAn ExecStart= process belonging to unit mosquitto.service has exited.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe process' exit code is 'exited' and its exit status is 1.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3839 and the job result is failed.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 5.
+[0;38;5;245m░░ [0m[0;32mSubject: Automatic restarting of a unit has been scheduled[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAutomatic restarting of the unit mosquitto.service has been scheduled, as the result for[0m
+[0;38;5;245m░░[0m [0;32mthe configured Restart= setting for the unit.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Start request repeated too quickly.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:51:26 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 3933 and the job result is failed.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has begun execution[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has begun execution.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4030.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: [0;1;39m[0;1;31m[0;1;39mmosquitto.service: Main process exited, code=exited, status=1/FAILURE[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit process exited[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAn ExecStart= process belonging to unit mosquitto.service has exited.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe process' exit code is 'exited' and its exit status is 1.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4030 and the job result is failed.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 1.
+[0;38;5;245m░░ [0m[0;32mSubject: Automatic restarting of a unit has been scheduled[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAutomatic restarting of the unit mosquitto.service has been scheduled, as the result for[0m
+[0;38;5;245m░░[0m [0;32mthe configured Restart= setting for the unit.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has begun execution[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has begun execution.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4124.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: [0;1;39m[0;1;31m[0;1;39mmosquitto.service: Main process exited, code=exited, status=1/FAILURE[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit process exited[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAn ExecStart= process belonging to unit mosquitto.service has exited.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe process' exit code is 'exited' and its exit status is 1.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4124 and the job result is failed.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 2.
+[0;38;5;245m░░ [0m[0;32mSubject: Automatic restarting of a unit has been scheduled[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAutomatic restarting of the unit mosquitto.service has been scheduled, as the result for[0m
+[0;38;5;245m░░[0m [0;32mthe configured Restart= setting for the unit.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has begun execution[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has begun execution.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4218.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: [0;1;39m[0;1;31m[0;1;39mmosquitto.service: Main process exited, code=exited, status=1/FAILURE[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit process exited[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAn ExecStart= process belonging to unit mosquitto.service has exited.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe process' exit code is 'exited' and its exit status is 1.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4218 and the job result is failed.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 3.
+[0;38;5;245m░░ [0m[0;32mSubject: Automatic restarting of a unit has been scheduled[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAutomatic restarting of the unit mosquitto.service has been scheduled, as the result for[0m
+[0;38;5;245m░░[0m [0;32mthe configured Restart= setting for the unit.[0m
+Aug 03 15:52:11 HP-EliteBook-840-G6 systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has begun execution[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has begun execution.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4312.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: [0;1;39m[0;1;31m[0;1;39mmosquitto.service: Main process exited, code=exited, status=1/FAILURE[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit process exited[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAn ExecStart= process belonging to unit mosquitto.service has exited.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe process' exit code is 'exited' and its exit status is 1.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4312 and the job result is failed.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 4.
+[0;38;5;245m░░ [0m[0;32mSubject: Automatic restarting of a unit has been scheduled[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAutomatic restarting of the unit mosquitto.service has been scheduled, as the result for[0m
+[0;38;5;245m░░[0m [0;32mthe configured Restart= setting for the unit.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has begun execution[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has begun execution.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4406.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: [0;1;39m[0;1;31m[0;1;39mmosquitto.service: Main process exited, code=exited, status=1/FAILURE[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit process exited[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAn ExecStart= process belonging to unit mosquitto.service has exited.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe process' exit code is 'exited' and its exit status is 1.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4406 and the job result is failed.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: mosquitto.service: Scheduled restart job, restart counter is at 5.
+[0;38;5;245m░░ [0m[0;32mSubject: Automatic restarting of a unit has been scheduled[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mAutomatic restarting of the unit mosquitto.service has been scheduled, as the result for[0m
+[0;38;5;245m░░[0m [0;32mthe configured Restart= setting for the unit.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Start request repeated too quickly.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmosquitto.service: Failed with result 'exit-code'.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: Unit failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe unit mosquitto.service has entered the 'failed' state with result 'exit-code'.[0m
+Aug 03 15:52:12 HP-EliteBook-840-G6 systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mosquitto.service - Mosquitto MQTT Broker.[0m
+[0;38;5;245m░░ [0m[0;32mSubject: A start job for unit mosquitto.service has failed[0m
+[0;38;5;245m░░[0m [0;32mDefined-By: systemd[0m
+[0;38;5;245m░░[0m [0;32mSupport: http://www.ubuntu.com/support[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mA start job for unit mosquitto.service has finished with a failure.[0m
+[0;38;5;245m░░[0m [0;32m[0m
+[0;38;5;245m░░[0m [0;32mThe job identifier is 4500 and the job result is failed.[0m
