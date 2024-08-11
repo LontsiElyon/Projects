@@ -205,16 +205,14 @@ public class ObjectRepository {
         });
     }
     
-    public void insertPlayerWithRfid(String rfidTag, Handler<AsyncResult<Integer>> resultHandler) {
-        // Default username for new players
-        String defaultName = "Unknown Player";
+    public void insertPlayerWithRfid(String username,String rfidTag, Handler<AsyncResult<Integer>> resultHandler) {
         
         // SQL query to insert a player with an RFID tag into the Players table
         // Uses LAST_INSERT_ID() to get the player_id of the existing or new row.
         String sql = "INSERT INTO Players (user_name, rfid_tag) VALUES (?, ?) ON DUPLICATE KEY UPDATE player_id = LAST_INSERT_ID(player_id)";
         
         // Execute the prepared SQL query using a tuple containing defaultName and rfidTag
-        jdbcPool.preparedQuery(sql).execute(Tuple.of(defaultName, rfidTag), ar -> {
+        jdbcPool.preparedQuery(sql).execute(Tuple.of(username, rfidTag), ar -> {
             if (ar.succeeded()) {
                 // Retrieve the auto-generated player ID
                 int playerID = ar.result().property(JDBCPool.GENERATED_KEYS).getInteger(0);

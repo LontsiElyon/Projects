@@ -101,6 +101,7 @@ public class ObjectService {
     JsonObject json = new JsonObject(payload);
     String rfidTag = json.getString("rfidTag");
     String controllerId = json.getString("controllerId");
+    String username = json.getString("username");
 
          // Insert or update the player with the RFID tag
     objectRepository.findPlayerByRfid(rfidTag, findResult -> {
@@ -108,7 +109,7 @@ public class ObjectService {
             int playerId = findResult.result();
             if (playerId == -1) {
                 // Player not found, create a new player with the RFID tag
-                objectRepository.insertPlayerWithRfid(rfidTag, insertResult -> {
+                 objectRepository.insertPlayerWithRfid(username,rfidTag, insertResult -> {
                     if (insertResult.succeeded()) {
                         int newPlayerId = insertResult.result();
                         createRfidSession(newPlayerId, controllerId, rfidTag, resultHandler);
@@ -116,6 +117,8 @@ public class ObjectService {
                         resultHandler.handle(Future.failedFuture(insertResult.cause()));
                     }
                 });
+                //sendRfidRegistrationPrompt(rfidTag, controllerId, resultHandler);
+                resultHandler.handle(Future.failedFuture("Player not found"));
             } else {
                 // Player found, create a session for the existing player
                 createRfidSession(playerId, controllerId, rfidTag, resultHandler);
@@ -125,6 +128,7 @@ public class ObjectService {
         }
     });
     }
+
     
     private void createRfidSession(int playerId, String controllerId, String rfidTag, Handler<AsyncResult<Void>> resultHandler) {
         // Create a new session and record RFID assignment
@@ -137,12 +141,36 @@ public class ObjectService {
         });
     }
 
+ /*    // Register player using username and RFID tag
+public void registerPlayer(String username, String rfidTag, Handler<AsyncResult<Void>> resultHandler) {
+    objectRepository.insertPlayerWithRfid(username, rfidTag, insertResult -> {
+        if (insertResult.succeeded()) {
+            resultHandler.handle(Future.succeededFuture());
+        } else {
+            resultHandler.handle(Future.failedFuture(insertResult.cause()));
+        }
+    });
+}*/
+
     public void fetchDisplayInfoByControllerId(String controllerId, Handler<AsyncResult<JsonObject>> resultHandler) {
         objectRepository.fetchDisplayInfoByControllerId(controllerId, resultHandler);
     }
 
     public void createDisplayInfo(String controllerId, int playerId, int points, int round, String username, Handler<AsyncResult<Void>> resultHandler) {
         objectRepository.insertDisplayInfo(controllerId, playerId, points, round, username, resultHandler);
+    }
+
+    public JsonArray generateColorSequence() {
+        // Generate a random sequence length between min and max
+        int sequenceLength = random.nextInt(maxSequenceLength - minSequenceLength + 1) + minSequenceLength;
+
+        JsonArray colorSequence = new JsonArray();
+        for (int i = 0; i < sequenceLength; i++) {
+            String color = COLORS.get(random.nextInt(COLORS.size()));
+            colorSequence.add(color);
+        }
+
+        return colorSequence;
     }
     
 }

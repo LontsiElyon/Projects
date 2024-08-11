@@ -6,19 +6,71 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <ArduinoJson.h>
+#include <Adafruit_NeoPixel.h>
 
 // WiFi settings
-const char *ssid = "SmartFactoryLab" ;    // TODO: Change to your WiFi SSID   "FRITZ!Box 7530 LL"  "SmartFactoryLab"
-const char *password = "smartfactorylab"; // TODO: Change to your WiFi Passwordt  "99704532092388225373"  "smartfactorylab"
+const char *ssid = "iPhone von patso" ;    // TODO: Change to your WiFi SSID   ""  "SmartFactoryLab"  Apartment Y119
+const char *password = "123456789"; // TODO: Change to your WiFi Passwordt  "99704532092388225373"  "smartfactorylab"
 
 // MQTT settings
-const char *mqtt_server = "192.168.50.199 "; // Laptop IP Address
+const char *mqtt_server = "172.20.10.4"; // Laptop IP Address
 const int mqtt_port = 1883;
 const char *mqtt_user = "sose24";
 const char *mqtt_password = "informatik";
 
 #define SS_PIN 5
 #define RST_PIN 4
+
+#define NEOPIXEL_PIN 15
+#define NUMPIXELS 4 
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+
+// Define some colors
+#define COLOR_RED    strip.Color(255, 0, 0)
+#define COLOR_GREEN  strip.Color(0, 255, 0)
+#define COLOR_BLUE   strip.Color(0, 0, 255)
+#define COLOR_YELLOW strip.Color(255, 255, 0)
+#define COLOR_OFF    strip.Color(0, 0, 0)
+
+uint32_t colorSequence[NUMPIXELS];
+
+// Function to show a single color
+void showColor(uint32_t color) {
+    for (int i = 0; i < strip.numPixels(); i++) {
+        strip.setPixelColor(i, color);
+    }
+    strip.show();
+    delay(500);  // Wait for half a second
+}
+
+// Function to show the sequence of colors
+void showColorSequence(uint32_t* sequence, int length) {
+    for (int i = 0; i < length; i++) {
+        showColor(sequence[i]);
+        delay(500);  // Pause between colors
+        showColor(COLOR_OFF);  // Turn off before the next color
+        delay(250);  // Short pause with LEDs off
+    }
+}
+
+/*void showColorSequence(uint32_t* sequence, int length) {
+    // Show each color in the sequence
+    for (int i = 0; i < length; i++) {
+        // Set the color for each pixel individually
+        for (int j = 0; j < strip.numPixels(); j++) {
+            strip.setPixelColor(j, sequence[j % length]); // Wrap around if more pixels than colors
+        }
+        strip.show();
+        delay(500);  // Pause between colors
+        // Optional: Turn off LEDs before the next color
+        for (int j = 0; j < strip.numPixels(); j++) {
+            strip.setPixelColor(j, COLOR_OFF);
+        }
+        strip.show();
+        delay(250);  // Short pause with LEDs off
+    }
+}*/
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
@@ -40,9 +92,9 @@ bool controllerIdPublished = false; // Flag to check if the controller ID has be
 
 
 // Data to display
-String playerName = "Unknown";
-int points = 0;
-int round = 0;
+//String playerName = "Unknown";
+//int points = 0;
+//int roundNumber = 0;
 
 void setup_wifi()
 {
@@ -66,6 +118,9 @@ void setup_wifi()
 }
 
 
+
+
+
 void reconnect()
 {
   while (!client.connected())
@@ -74,8 +129,10 @@ void reconnect()
     if (client.connect("ESP32Client", mqtt_user, mqtt_password))
     {
       Serial.println("connected");
-      client.subscribe("player/update"); // Subscribe to the player/update topic
-      
+      //client.subscribe("player/update"); // Subscribe to the player/update topic
+     if(client.subscribe("neopixel/display")) {
+       Serial.println("Subscripted successfully");
+     }
     }
     else{
       Serial.print("failed, rc=");
@@ -193,6 +250,17 @@ void setup()
   display.display(); // Update the display
 
 */
+strip.begin();
+    strip.show();  // Initialize all pixels to 'off'
+
+   /* // Example sequence
+    colorSequence[0] = COLOR_RED;
+    colorSequence[1] = COLOR_GREEN;
+    colorSequence[2] = COLOR_BLUE;
+    colorSequence[3] = COLOR_YELLOW;
+
+    // Show the color sequence
+    showColorSequence(colorSequence, 4);*/
  
 }
 
@@ -203,14 +271,14 @@ void loop()
   {
     reconnect();
   }
-
+   client.loop();
    // Check if the controller ID has already been published
   if (!controllerIdPublished)
   {
     Serial.println("Publishing Controller ID");
 
     // Define the controller ID
-    String controllerId = "controller_1"; // Change to a unique ID for each controller
+    String controllerId = "controller_2"; // Change to a unique ID for each controller
 
     // Publish the controller ID to the MQTT server
     if (client.publish("controller/connect", controllerId.c_str()))
@@ -259,7 +327,7 @@ void loop()
 
   // Log and publish the RFID tag
   Serial.print("RFID Tag Detected: ");
-  String payload = "{\"controllerId\":\"controller_1\", \"rfidTag\":\"" + rfidTag + "\"}";
+  String payload = "{\"controllerId\":\"controller_1\", \"rfidTag\":\"" + rfidTag + "\", \"username\":\"Elyon's RFID\"}";
    // Publish the RFID tag
   if (client.publish("controller/rfid", payload.c_str())) {
     Serial.println("RFID tag published successfully.");
@@ -271,46 +339,5 @@ void loop()
 }
 
 
-void displayPlayerInfo(const String& playerName, int points, int round) {
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-    
-    // Display player name
-    display.setCursor(0, 0);
-    display.println("Player: " + playerName);
-    
-    // Display player points
-    display.setCursor(0, 10);
-    display.println("Points: " + String(points));
 
-    // Display round number
-    display.setCursor(0, 20);
-    display.println("Round: " + String(round));
 
-    // Update the display with new content
-    display.display();
-}
-
-void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  String message = "";
-  for (int i = 0; i < length; i++) {
-    message += (char)payload[i];
-  }
-  Serial.println(message);
-
-  if (String(topic) == "player/update") {
-    // Assuming the message is JSON like {"playerName":"John", "points":10, "round":1}
-    DynamicJsonDocument doc(256);
-    deserializeJson(doc, message);
-    playerName = doc["playerName"].as<String>();
-    points = doc["points"].as<int>();
-    round = doc["round"].as<int>();
-
-    // Update the display with new player info
-    displayPlayerInfo(playerName, points, round);
-  }
-}

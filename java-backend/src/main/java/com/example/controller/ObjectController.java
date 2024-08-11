@@ -28,6 +28,9 @@ public class ObjectController {
         router.post("/api/login").handler(this::handleLogin);
         router.post("/api/display").handler(this::handleCreateDisplayInfo);
         router.get("/api/display/:controllerId").handler(this::handleFetchDisplayInfoByControllerId);
+        router.post("/generate-sequence").handler(this::handleGenerateSequence);
+        //router.post("/api/register").handler(this::handleRegisterUserWithRfid);
+       
     }
 
     private void handleCreate(RoutingContext ctx) {
@@ -207,12 +210,56 @@ private void handleRfidScan(Buffer payload) {
         if (res.succeeded()) {
             // On success, log that the RFID scan was processed successfully
             logger.info("RFID scan processed successfully for tag: {}", payloadStr);
+
         } else {
+            /*// If the player is not found, notify the frontend to prompt registration
+            if ("Player not found".equals(res.cause().getMessage())) {
+                notifyFrontendForRegistration(payloadStr);
+            }*/
             // On failure, log the error with the failure cause
             logger.error("Failed to process RFID scan: {}", res.cause().getMessage());
         }
     });
 }
+
+// Method to notify the frontend for registration
+/*private void notifyFrontendForRegistration(String payloadStr) {
+    JsonObject json = new JsonObject(payloadStr);
+    String rfidTag = json.getString("rfidTag");
+
+    // Publish a message to the frontend via MQTT
+    JsonObject message = new JsonObject()
+            .put("action", "promptRegistration")
+            .put("rfidTag", rfidTag);
+
+    // Publish the message to the predefined MQTT topic
+    mqttClient.publish("frontend/registration", 
+            Buffer.buffer(message.encode()), 
+            MqttQoS.AT_LEAST_ONCE, 
+            false, 
+            false);
+}*/
+
+// Handler method for user registration
+/*private void handleRegisterUserWithRfid(RoutingContext ctx) {
+    JsonObject body = ctx.getBodyAsJson();
+    String rfidTag = body.getString("rfidTag");
+    String username = body.getString("username");
+
+    if (rfidTag == null || username == null) {
+        ctx.response().setStatusCode(400).end("RFID tag and username are required");
+        return;
+    }
+
+    // Register the player with the provided username and RFID tag
+    objectService.fetchDisplayInfoByControllerId(username, rfidTag, res -> {
+        if (res.succeeded()) {
+            ctx.response().setStatusCode(200).end(new JsonObject().put("success", true).encode());
+        } else {
+            ctx.response().setStatusCode(500).end(new JsonObject().put("success", false).put("error", res.cause().getMessage()).encode());
+        }
+    });
+}*/
 
 private void handleCreateDisplayInfo(RoutingContext ctx) {
     JsonObject requestBody = ctx.getBodyAsJson();
@@ -249,6 +296,38 @@ private void handleFetchDisplayInfoByControllerId(RoutingContext ctx) {
             logger.error("Failed to fetch display info: {}", res.cause().getMessage());
         }
     });
+}
+
+private void handleGenerateSequence(RoutingContext routingContext) {
+    // Generate a new color sequence
+    JsonArray colorSequence = objectService.generateColorSequence();
+
+    // Send the color sequence to the MQTT client
+    sendColorSequenceToNeopixel(colorSequence);
+
+    // Respond to the client with the generated sequence
+    JsonObject response = new JsonObject().put("sequence", colorSequence);
+    routingContext.response()
+                  .putHeader("content-type", "application/json")
+                  .end(response.encode());
+}
+
+private void sendColorSequenceToNeopixel(JsonArray colorSequence) {
+    String topic = "neopixel/display"; // The MQTT topic for NeoPixel
+    String message = colorSequence.encode();
+
+    mqttClient.publish(topic,
+        Buffer.buffer(message),
+        MqttQoS.AT_LEAST_ONCE,
+        false,
+        false,
+        ar -> {
+            if (ar.succeeded()) {
+                logger.info("Color sequence sent to NeoPixel: " + message);
+            } else {
+                logger.error("Failed to send color sequence to NeoPixel", ar.cause());
+            }
+        });
 }
 
 
