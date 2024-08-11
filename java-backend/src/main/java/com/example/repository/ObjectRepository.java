@@ -3,11 +3,24 @@ package com.example.repository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.jdbcclient.JDBCPool;
+import io.vertx.mysqlclient.MySQLClient;
 import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.PropertyKind;
+import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 
+import java.sql.JDBCType;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ObjectRepository {
+
+    private static final Logger logger = LoggerFactory.getLogger(ObjectRepository.class);
 
     private final Pool jdbcPool;
 

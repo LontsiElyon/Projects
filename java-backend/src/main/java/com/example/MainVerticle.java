@@ -10,7 +10,7 @@ import com.example.controller.ObjectController;
 import com.example.repository.ObjectRepository;
 import com.example.service.ObjectService;
 
-
+import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -21,11 +21,15 @@ import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.mqtt.MqttClient;
 import io.vertx.mqtt.MqttClientOptions;
 import io.vertx.sqlclient.PoolOptions;
+import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
+
 
 public class MainVerticle extends AbstractVerticle {
 
     private static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
 
+    ObjectController objectController;
     @Override
     public void start(Promise<Void> startPromise) {
         // Retrieve environment variables
@@ -52,6 +56,7 @@ public class MainVerticle extends AbstractVerticle {
 
         // Setup MQTT client
         MqttClient mqttClient = setupMqttClient(mqttUsername, mqttPassword);
+        
         // Setup JDBC client pool
         JDBCPool jdbcPool = setupJdbcClient(dbHost, dbPort, dbName, dbUser, dbPassword);
         // Setup HTTP server router
@@ -84,6 +89,10 @@ public class MainVerticle extends AbstractVerticle {
         mqttClient.connect(1883, "mosquitto", ar -> {
             if (ar.succeeded()) {
                 logger.info("Connected to the MQTT broker successfully!");
+                // Setup MQTT subscription and handlers
+                this.objectController.setupMqttHandlers();
+                //this.objectController.setupMqttHandlers2();
+                
             } else {
                 logger.error("Failed to connect to the MQTT broker: {}", ar.cause().getMessage());
             }
@@ -92,6 +101,7 @@ public class MainVerticle extends AbstractVerticle {
         return mqttClient;
     }
 
+   
     private JDBCPool setupJdbcClient(String host, int port, String dbName, String user, String password) {
         // JDBC client pool configuration options
         return JDBCPool.pool(vertx,
@@ -127,7 +137,7 @@ public class MainVerticle extends AbstractVerticle {
                 .allowedMethods(allowedMethods));
 
         // Setup controllers
-        ObjectController objectController = new ObjectController(router, new ObjectService(new ObjectRepository(jdbcPool)), mqttClient);
+        this.objectController = new ObjectController(router, new ObjectService(new ObjectRepository(jdbcPool)), mqttClient);
 
         return router;
     }
