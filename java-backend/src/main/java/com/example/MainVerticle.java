@@ -10,6 +10,7 @@ import com.example.controller.ObjectController;
 import com.example.repository.ObjectRepository;
 import com.example.service.ObjectService;
 
+import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;

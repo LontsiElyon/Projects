@@ -1,1 +1,49 @@
 /* CSS File to style the Frontend */
+/* CSS File to style the Frontend */
+body {
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 800px;
+}
+
+#player-login, #game-start, #game-info {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+#game-info {
+    text-align: center;
+}
+
+.player-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+}
+
+.player-info span {
+    font-weight: bold;
+}
+
+#login-result .alert {
+    margin-top: 10px;
+}
+
+.btn {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+h2 {
+    font-size: 1.5rem;
+    color: #333;
+}
