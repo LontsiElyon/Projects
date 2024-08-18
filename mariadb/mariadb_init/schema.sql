@@ -27,6 +27,12 @@ CREATE TABLE Sessions (
     login_method ENUM('RFID', 'Frontend') NOT NULL,  -- Method used to login, either via RFID or the frontend
     start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Timestamp when the session started
     end_time TIMESTAMP NULL,  -- Timestamp when the session ended, null if session is ongoing
+    round INT DEFAULT 1,  -- The current round within the session, defaulting to 1
+
+    -- Composite unique key
+    UNIQUE KEY unique_session (controller_id, player_id, round),
+
+    -- Foreign key relationships
     FOREIGN KEY (player_id) REFERENCES Players(player_id),  -- Establishes a relationship with the Players table
     FOREIGN KEY (controller_id) REFERENCES Controllers(controller_id)  -- Establishes a relationship with the Controllers table
 );
@@ -56,18 +62,17 @@ CREATE TABLE FrontendAssignments (
 CREATE TABLE DisplayInfo (
     controller_id VARCHAR(50),  -- Identifier for the controller
     player_id INT,              -- Foreign key referencing Players table
-    points INT,                -- Points to be displayed
-    round INT,                 -- Round number to be displayed (references Sessions table)
-    username VARCHAR(50),      -- Username associated with the player
+    points INT,                 -- Points to be displayed
+    round INT,                  -- Round number to be displayed
+    username VARCHAR(50),       -- Username associated with the player
     last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  -- Last update timestamp
     
     -- Composite primary key to ensure uniqueness
     PRIMARY KEY (controller_id, round),
     
     -- Foreign key constraints
-    FOREIGN KEY (controller_id) REFERENCES Controllers(controller_id),  -- Reference to Controllers table
-    FOREIGN KEY (player_id) REFERENCES Players(player_id),  -- Reference to Players table
-    FOREIGN KEY (round) REFERENCES Sessions(session_id)  -- Reference to Sessions table
+    FOREIGN KEY (controller_id, player_id, round) REFERENCES Sessions(controller_id, player_id, round),  -- Reference to Sessions table
+    FOREIGN KEY (player_id) REFERENCES Players(player_id)  -- Reference to Players table
 );
 
 CREATE TABLE DisplayUpdates (

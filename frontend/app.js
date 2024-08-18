@@ -144,7 +144,7 @@ $(document).ready(function() {
     // Handle Start Game button click
     $('#start-game').click(function() {
         $.ajax({
-            url: '/api/start-game',
+            url: '/api/generate-sequence',
             method: 'POST',
             success: function(response) {
                 $('#info-display').html('<p>Game has started!</p>');

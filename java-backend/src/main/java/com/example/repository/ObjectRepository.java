@@ -14,6 +14,8 @@ import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 
 import java.sql.JDBCType;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,6 +121,66 @@ public class ObjectRepository {
                 resultHandler.handle(Future.failedFuture(ar.cause()));
             }
         });
+    }
+
+    public void getConnectedControllers(Handler<AsyncResult<List<String>>> resultHandler) {
+        // SQL query to retrieve all controller IDs from active sessions (with a player associated)
+        String query = "SELECT controller_id FROM Sessions WHERE end_time IS NULL AND player_id IS NOT NULL";
+    
+        jdbcPool.query(query).execute(ar -> {
+            if (ar.succeeded()) {
+                List<String> connectedControllers = new ArrayList<>();
+                RowSet<Row> rows = ar.result();
+                for (Row row : rows) {
+                    connectedControllers.add(row.getString("controller_id"));
+                }
+                resultHandler.handle(Future.succeededFuture(connectedControllers));
+            } else {
+                resultHandler.handle(Future.failedFuture(ar.cause()));
+            }
+        });
+    }
+
+   
+
+    public void isControllerInUse(String controllerId, Handler<AsyncResult<Boolean>> resultHandler) {
+        // Query the database to check if the controller is already in use
+        String query = "SELECT COUNT(*) FROM RfidAssignments WHERE controller_id = ?";
+        jdbcPool.preparedQuery(query)
+              .execute(Tuple.of(controllerId), ar -> {
+                  if (ar.succeeded()) {
+                      RowSet<Row> rows = ar.result();
+                      if (rows.iterator().hasNext()) {
+                          Row row = rows.iterator().next();
+                          int count = row.getInteger(0);
+                          resultHandler.handle(Future.succeededFuture(count > 0));
+                      } else {
+                          resultHandler.handle(Future.succeededFuture(false));
+                      }
+                  } else {
+                      resultHandler.handle(Future.failedFuture(ar.cause()));
+                  }
+              });
+    }
+
+    public void isControllerInUseInFrontend(String controllerId, Handler<AsyncResult<Boolean>> resultHandler) {
+        // Query the database to check if the controller is already in use in frontend assignments
+        String query = "SELECT COUNT(*) FROM FrontendAssignments WHERE controller_id = ?";
+        jdbcPool.preparedQuery(query)
+                .execute(Tuple.of(controllerId), ar -> {
+                    if (ar.succeeded()) {
+                        RowSet<Row> rows = ar.result();
+                        if (rows.iterator().hasNext()) {
+                            Row row = rows.iterator().next();
+                            int count = row.getInteger(0);
+                            resultHandler.handle(Future.succeededFuture(count > 0));
+                        } else {
+                            resultHandler.handle(Future.succeededFuture(false));
+                        }
+                    } else {
+                        resultHandler.handle(Future.failedFuture(ar.cause()));
+                    }
+                });
     }
 
      public void insertPlayer(String username, Handler<AsyncResult<Integer>> resultHandler) {
@@ -279,17 +341,97 @@ public class ObjectRepository {
         });
     }
 
-    public void insertDisplayInfo(String controllerId, int playerId, int points, int round, String username, Handler<AsyncResult<Void>> resultHandler) {
-        String query = "INSERT INTO DisplayInfo (controller_id, player_id, points, round, username) VALUES (?, ?, ?, ?, ?)";
-        jdbcPool.preparedQuery(query).execute(Tuple.of(controllerId, playerId, points, round, username), ar -> {
-            if (ar.succeeded()) {
-                resultHandler.handle(Future.succeededFuture());
-            } else {
-                resultHandler.handle(Future.failedFuture(ar.cause()));
-            }
-        });
+    public Future<Integer> fetchPlayerIdByControllerId(String controllerId) {
+        String query = "SELECT player_id FROM Sessions WHERE controller_id = ? AND end_time IS NULL";
+        return jdbcPool.preparedQuery(query)
+            .execute(Tuple.of(controllerId))
+            .map(rows -> {
+                if (rows.iterator().hasNext()) {
+                    return rows.iterator().next().getInteger("player_id");
+                } else {
+                    logger.error("No active session found for controllerId: {}", controllerId);
+                    return null; // Handle case where no active session is found
+                }
+            });
     }
 
+    public Future<Integer> fetchCurrentRoundByControllerId(String controllerId, int playerId) {
+        String selectQuery = "SELECT round FROM Sessions WHERE controller_id = ? AND player_id = ? AND end_time IS NULL";
+    
+        return jdbcPool.preparedQuery(selectQuery)
+            .execute(Tuple.of(controllerId, playerId))
+            .compose(rows -> {
+                if (rows.size() > 0) {
+                    // Return the round number if found
+                    return Future.succeededFuture(rows.iterator().next().getInteger("round"));
+                } else {
+                    // If no session is found, default to round 1
+                    return Future.succeededFuture(1);
+                }
+            })
+            .onFailure(cause -> {
+                // Log the error and return a failed Future
+                logger.error("Failed to retrieve current round for controller {}: {}", controllerId, cause.getMessage());
+            });
+    }
+
+    public Future<Void> updatePoints(String controllerId, int playerId, int round) {
+        return fetchUsernameByPlayerId(playerId)  // Fetch the username
+            .compose(username -> {
+                String updateQuery = "UPDATE DisplayInfo SET points = points + 1, username = ? WHERE controller_id = ? AND player_id = ? AND round = ?";
+                return jdbcPool.preparedQuery(updateQuery)
+                    .execute(Tuple.of(username, controllerId, playerId, round))
+                    .onFailure(cause -> logger.error("Failed to update points for controller {}: {}", controllerId, cause.getMessage()))
+                    .compose(result -> {
+                        if (result.rowCount() == 0) {
+                            // No existing record, insert a new one
+                            return insertDisplayInfo(controllerId, playerId, round, username);
+                        } else {
+                            return Future.succeededFuture();
+                        }
+                    });
+            });
+    }
+    
+    private Future<Void> insertDisplayInfo(String controllerId, int playerId, int round, String username) {
+        String insertQuery = "INSERT INTO DisplayInfo (controller_id, player_id, round, points, username) VALUES (?, ?, 1, ?, ?)";
+        return jdbcPool.preparedQuery(insertQuery)
+            .execute(Tuple.of(controllerId, playerId, round, username))
+            .onFailure(cause -> logger.error("Failed to insert DisplayInfo for controller {}: {}", controllerId, cause.getMessage()))
+            .mapEmpty();
+    }
+    
+    private Future<String> fetchUsernameByPlayerId(int playerId) {
+        String query = "SELECT user_name FROM Players WHERE player_id = ?";
+        return jdbcPool.preparedQuery(query)
+            .execute(Tuple.of(playerId))
+            .map(rows -> {
+                if (rows.size() > 0) {
+                    return rows.iterator().next().getString("user_name");
+                } else {
+                    logger.error("No username found for playerId: {}", playerId);
+                    return null;
+                }
+            });
+    }
+
+    public Future<JsonObject> fetchDisplayInfo(String controllerId) {
+        String query = "SELECT username, points, round FROM DisplayInfo WHERE controller_id = ?";
+        return jdbcPool.preparedQuery(query)
+            .execute(Tuple.of(controllerId))
+            .map(rows -> {
+                if (rows.size() > 0) {
+                    Row row = rows.iterator().next();
+                    return new JsonObject()
+                        .put("username", row.getString("username"))
+                        .put("points", row.getInteger("points"))
+                        .put("round", row.getInteger("round"));
+                } else {
+                    return new JsonObject(); // Return an empty JsonObject if no rows are found
+                }
+            })
+            .onFailure(cause -> logger.error("Failed to fetch display info for controller {}: {}", controllerId, cause.getMessage()));
+    }
 
 }  
 
