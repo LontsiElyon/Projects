@@ -6,16 +6,15 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.jdbcclient.JDBCPool;
-import io.vertx.mysqlclient.MySQLClient;
 import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PropertyKind;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 
-import java.sql.JDBCType;
+
 import java.util.ArrayList;
 import java.util.List;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -432,6 +431,36 @@ public class ObjectRepository {
             })
             .onFailure(cause -> logger.error("Failed to fetch display info for controller {}: {}", controllerId, cause.getMessage()));
     }
+
+    /*public Future<Void> resetPlayerState(String controllerId) {
+        // SQL to reset points and increment round in DisplayInfo
+        String updateDisplayInfoSql = "UPDATE DisplayInfo SET points = 0, round = round + 1 WHERE controller_id = ?";
+        
+        // SQL to increment round in Sessions
+        String updateSessionSql = "UPDATE Sessions SET round = round + 1 WHERE controller_id = ? AND end_time IS NULL";
+        
+        Future<RowSet<Row>> updateDisplayInfo = jdbcPool.preparedQuery(updateDisplayInfoSql)
+        .execute(Tuple.of(controllerId));
+    
+        Future<RowSet<Row>> updateSession = jdbcPool.preparedQuery(updateSessionSql)
+            .execute(Tuple.of(controllerId));
+    
+    return Future.all(updateDisplayInfo, updateSession)
+          // This converts Future<List<Object>> to Future<Void>
+        .onSuccess(v -> logger.info("Player state reset for controller: {}", controllerId))
+        .onFailure(err -> logger.error("Failed to reset player state for controller {}: {}", controllerId, err.getMessage()))
+        .mapEmpty();
+    }*/
+
+    
+
+
+
+
+
+
+
+
 
 }  
 

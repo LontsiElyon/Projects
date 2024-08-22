@@ -87,7 +87,14 @@ unsigned long lastDebounceTime[4] = {0, 0, 0, 0};
 
 // Track the start time of the input window
 unsigned long inputWindowStart = 0;
-const unsigned long inputWindowDuration = 10000; // 5 seconds input window
+unsigned long inputWindowDuration ; // 5 seconds input window
+const unsigned long baseInputDuration = 10000;
+const unsigned long additionalTimePerColor = 2000;
+bool readyForNextSequence = true;
+bool hasLost = false;
+bool sequenceEntered = false;
+const int maxSequenceLength = 20;
+bool gameStarted = false;
 
 // Array to store the sequence of colors
 uint32_t sequenceColor[100];  // Assuming a maximum of 20 colors in the sequence
@@ -164,6 +171,63 @@ void reconnect()
   }
 }
 
+void displayLossMessage() {
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SSD1306_WHITE);
+
+    int16_t x1, y1;
+    uint16_t width, height;
+
+    display.getTextBounds("YOU LOST!", 0, 0, &x1, &y1, &width, &height);
+    int16_t xPos = (SCREEN_WIDTH - width) / 2;
+    int16_t yPos = 15;
+    display.setCursor(xPos, yPos);
+    display.println("YOU LOST!");
+
+    display.setTextSize(1);
+    display.getTextBounds("wrong combination", 0, 0, &x1, &y1, &width, &height);
+    xPos = (SCREEN_WIDTH - width) / 2;
+    yPos = 40; 
+    display.setCursor(xPos, yPos);
+    display.println("wrong combination");
+
+    display.display(); 
+
+    delay(1500); 
+
+    // Vertical lines clearing from bottom to top
+    for (int y = SCREEN_HEIGHT - 1; y >= 0; y--) {
+        display.drawLine(0, y, SCREEN_WIDTH, y, SSD1306_BLACK); // Draw horizontal line from left to right
+        display.display();
+        delay(10); // Adjust delay to control the speed of the clearing animation
+    }
+
+    delay(1000); // Hold the final cleared screen for 1 second
+    display.clearDisplay(); // Clear the display at the end to ensure it's completely empty
+    display.display();
+
+}
+
+void startCountdown() {
+    for (int i = 3; i > 0; i--) {
+        display.clearDisplay();
+        display.setTextSize(4);
+        display.setTextColor(SSD1306_WHITE);
+        display.setCursor(SCREEN_WIDTH/2 - 12, SCREEN_HEIGHT/2 - 16);
+        display.println(i);
+        display.display();
+        delay(1000);
+    }
+    
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setCursor(SCREEN_WIDTH/2 - 24, SCREEN_HEIGHT/2 - 8);
+    display.println("GO!");
+    display.display();
+    delay(1000);
+}
+
 void displayPlayerInfo(const String& playerName, int points, int round) {
 
   Serial.println("Displaying player info:");
@@ -204,6 +268,17 @@ void displayPlayerInfo(const String& playerName, int points, int round) {
 
 }
 
+
+
+void onSequenceReceived(int sequenceLength) {
+  inputWindowDuration = baseInputDuration + (sequenceLength * additionalTimePerColor);
+  inputWindowStart = millis();
+  Serial.print("Input window started for ");
+  Serial.print(inputWindowDuration);
+  Serial.println(" milliseconds");
+
+}
+
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
     Serial.print("Message arrived [");
     Serial.print(topic);
@@ -216,6 +291,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     Serial.println(message);
 
     if (String(topic) == "neopixel/display") {
+        gameStarted = true;
+        hasLost = false;
         // Process color sequence
         DynamicJsonDocument doc(512); // Increase size if needed
         DeserializationError error = deserializeJson(doc, message);
@@ -234,6 +311,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
         // Update colorSequence array based on the JSON array
         int sequenceLength = doc.size();
         Serial.print(sequenceLength);
+        
+
         for (int i = 0; i < sequenceLength || i < NUMPIXELS; i++) {
                     
             String colorStr = doc[i].as<String>();
@@ -255,28 +334,39 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
             }
         }
 
+        // Start countdown before showing the sequence
+        startCountdown();
+
         // Show the received color sequence
         showColorSequence(colorSequence, sequenceLength);
+        onSequenceReceived(sequenceLength);
     }
 
     // Handle the OLED display update
     if (String(topic) == "oled/display/controller_2") {
-      Serial.println("Displaying on OLED");
-        DynamicJsonDocument doc(512);
-        DeserializationError error = deserializeJson(doc, message);
+    Serial.println("Displaying on OLED");
+    DynamicJsonDocument doc(512);
+    DeserializationError error = deserializeJson(doc, message);
 
-        if (error) {
-            Serial.print("Failed to parse JSON: ");
-            Serial.println(error.c_str());
-            return;
-        }
+    if (error) {
+        Serial.print("Failed to parse JSON: ");
+        Serial.println(error.c_str());
+        return;
+    }
 
-        String username = doc["username"];
-        int points = doc["points"];
-        int round = doc["round"];
+    String username = doc["username"];
+    int points = doc["points"];
+    int round = doc["round"];
+    String gameMessage = doc["message"];
 
+    if (gameMessage == "You lost!") {
+        hasLost = true;
+        displayLossMessage();
+    } else {
         displayPlayerInfo(username, points, round);
     }
+}
+
 }
 
 void controller(){
@@ -348,81 +438,98 @@ void rfid(){
 
 }
 
-void game(){
-   if (inputWindowStart == 0) {
-    inputWindowStart = millis(); // Start the input window when the loop begins
-  }
-
-  // Check if within the input window
-  if (millis() - inputWindowStart < inputWindowDuration) {
-    //Serial.println("Waiting for button presses...");
-
-    for (byte i = 0; i < 4; i++) {
-      int reading = digitalRead(buttonPins[i]);
-
-      if (reading != currentButtonState[i]) {
-        lastDebounceTime[i] = millis();
-      }
-
-      if ((millis() - lastDebounceTime[i]) > debounceDelay) {
-        if (reading != lastButtonState[i]) {
-          lastButtonState[i] = reading;
-
-          if (reading == HIGH) {
-            // Button pressed
-            digitalWrite(ledPins[i], HIGH);  // Turn on the corresponding LED
-            Serial.println("Button pressed!");
-
-            // Record the color in the sequence array
-            if (sequenceIndex < 20) {
-              switch (i) {
-                case 0: sequenceColor[sequenceIndex] = RED; break;
-                case 1: sequenceColor[sequenceIndex] = YELLOW; break;
-                case 2: sequenceColor[sequenceIndex] = GREEN; break;
-                case 3: sequenceColor[sequenceIndex] = BLUE; break;
-              }
-              sequenceIndex++;
-            }
-          } else {
-            digitalWrite(ledPins[i], LOW);  // Turn off the corresponding LED
-          }
-        }
-      }
-
-      currentButtonState[i] = reading;
+void requestNextSequence() {
+    if (client.publish("controller/request_sequence", "controller_2")) {
+        Serial.println("Next sequence requested");
+    } else {
+        Serial.println("Failed to request next sequence");
     }
-
-  } else {
-    // Publish the sequence after the input window ends
-    if (sequenceIndex > 0) {
-      String sequencePayload = "{\"controllerId\":\"controller_2\", \"sequence\":[";
-
-      for (int i = 0; i < sequenceIndex; i++) {
-        sequencePayload += "\"" + String(getColorName(sequenceColor[i])) + "\"";
-        if (i < sequenceIndex - 1) {
-          sequencePayload += ",";
-        }
-      }
-
-      sequencePayload += "]}";
-
-      // Publish to the server
-      if (client.publish("controller/color_sequence", sequencePayload.c_str())) {
-        Serial.println("Color sequence published: " + sequencePayload);
-      } else {
-        Serial.println("Failed to publish color sequence.");
-      }
-
-      // Reset the sequence index for the next round
-      sequenceIndex = 0;
-    }
-
-    // Reset the input window timer
-    inputWindowStart = millis();
-  }
-
-
 }
+
+void game() {
+    if (!gameStarted || hasLost) {
+        return; // Don't process any inputs if the game hasn't started or if this controller has lost
+    }
+
+    if (inputWindowStart == 0) {
+        inputWindowStart = millis();
+        sequenceEntered = false; // Reset the flag at the start of each input window
+    }
+
+    if (millis() - inputWindowStart < inputWindowDuration) {
+        for (byte i = 0; i < 4; i++) {
+            int reading = digitalRead(buttonPins[i]);
+
+            if (reading != currentButtonState[i]) {
+                lastDebounceTime[i] = millis();
+            }
+
+            if ((millis() - lastDebounceTime[i]) > debounceDelay) {
+                if (reading != lastButtonState[i]) {
+                    lastButtonState[i] = reading;
+
+                    if (reading == HIGH) {
+                        digitalWrite(ledPins[i], HIGH);
+                        Serial.println("Button pressed!");
+
+                        if (sequenceIndex < 20) {
+                            switch (i) {
+                                case 0: sequenceColor[sequenceIndex] = RED; break;
+                                case 1: sequenceColor[sequenceIndex] = YELLOW; break;
+                                case 2: sequenceColor[sequenceIndex] = GREEN; break;
+                                case 3: sequenceColor[sequenceIndex] = BLUE; break;
+                            }
+                            sequenceIndex++;
+                            sequenceEntered = true;
+                        }
+                    } else {
+                        digitalWrite(ledPins[i], LOW);
+                    }
+                }
+            }
+
+            currentButtonState[i] = reading;
+        }
+    } else {
+        if (sequenceEntered) {
+            String sequencePayload = "{\"controllerId\":\"controller_2\", \"sequence\":[";
+
+            for (int i = 0; i < sequenceIndex; i++) {
+                sequencePayload += "\"" + String(getColorName(sequenceColor[i])) + "\"";
+                if (i < sequenceIndex - 1) {
+                    sequencePayload += ",";
+                }
+            }
+
+            sequencePayload += "]}";
+
+            if (client.publish("controller/color_sequence", sequencePayload.c_str())) {
+                Serial.println("Color sequence published: " + sequencePayload);
+            } else {
+                Serial.println("Failed to publish color sequence.");
+            }
+
+            sequenceIndex = 0;
+            requestNextSequence();
+        }else {
+            // No sequence entered within the time limit
+            hasLost = true;
+            displayLossMessage();
+            // Optionally, inform the server about the loss
+            String lossPayload = "{\"controllerId\":\"controller_2\", \"status\":\"lost\"}";
+            if (client.publish("controller/status", lossPayload.c_str())) {
+                Serial.println("Loss status published");
+            } else {
+                Serial.println("Failed to publish loss status");
+            }
+        }
+
+        inputWindowStart = 0;
+    }
+}
+
+
+
 
 void setup()
 {
@@ -467,7 +574,10 @@ void setup()
     pinMode(ledPins[i], OUTPUT);
     pinMode(buttonPins[i], INPUT_PULLUP);
   }  
- 
+    gameStarted = false;
+    hasLost = false;
+    inputWindowStart = 0;
+    sequenceIndex = 0;
 
 }
 
@@ -486,9 +596,11 @@ void loop()
   //Serial.println("Acessed RFID");
   rfid();
 
-  game();
+    if (gameStarted) {
+        game();
+    }
 
-  delay(1000); // Publish every 2 seconds
+  //delay(1000); // Publish every 2 seconds
 }
 
 

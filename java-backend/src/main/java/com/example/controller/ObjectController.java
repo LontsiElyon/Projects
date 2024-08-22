@@ -8,11 +8,14 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.mqtt.MqttClient;
 import io.netty.handler.codec.mqtt.MqttQoS;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import java.util.ArrayList;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -32,10 +35,6 @@ public class ObjectController {
         this.mqttClient = mqttClient;
         this.vertx = Vertx.vertx();
         // Register routes
-        router.post("/api/create").handler(this::handleCreate);
-        router.get("/api/objects").handler(this::handleRead);
-        router.put("/api/update/:id").handler(this::handleUpdate);
-        router.delete("/api/delete/:id").handler(this::handleDelete);
 
         router.get("/api/controllers").handler(this::handleFetchControllers);
         router.post("/api/login").handler(this::handleLogin);
@@ -43,77 +42,7 @@ public class ObjectController {
        
     }
 
-    private void handleCreate(RoutingContext ctx) {
-        String message = ctx.getBodyAsString();
-        logger.debug("Received request to create object with message: {}", message);
 
-        // Call service to create object
-        objectService.createObject(message, res -> {
-            if (res.succeeded()) {
-                // Publish message to MQTT
-                mqttClient.publish("simon/game", Buffer.buffer(message), MqttQoS.AT_LEAST_ONCE, false, false, mqttAr -> {
-                    if (mqttAr.succeeded()) {
-                        ctx.response().setStatusCode(201).end("Object created, saved in DB and message sent via MQTT");
-                        logger.debug("Published message to MQTT: {}", message);
-                    } else {
-                        ctx.response().setStatusCode(500).end("Failed to send message via MQTT");
-                        logger.error("Failed to publish message to MQTT: {}", mqttAr.cause().getMessage());
-                    }
-                });
-            } else {
-                ctx.response().setStatusCode(500).end("Failed to insert data into database");
-                logger.error("Failed to insert data into database: {}", res.cause().getMessage());
-            }
-        });
-    }
-
-    private void handleRead(RoutingContext ctx) {
-        // Call service to read objects
-        objectService.readObjects(res -> {
-            if (res.succeeded()) {
-                ctx.response()
-                        .putHeader("content-type", "application/json")
-                        .end(res.result().encode());
-                logger.debug("Fetched objects from database");
-            } else {
-                ctx.response().setStatusCode(500).end("Failed to fetch data from database");
-                logger.error("Failed to fetch data from database: {}", res.cause().getMessage());
-            }
-        });
-    }
-
-    private void handleUpdate(RoutingContext ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
-        String message = ctx.getBodyAsString();
-        logger.debug("Received request to update object with id: {} and message: {}", id, message);
-
-        // Call service to update object
-        objectService.updateObject(id, message, res -> {
-            if (res.succeeded()) {
-                ctx.response().setStatusCode(200).end("Object updated successfully");
-                logger.debug("Updated object with id: {}", id);
-            } else {
-                ctx.response().setStatusCode(500).end("Failed to update data in database");
-                logger.error("Failed to update data in database: {}", res.cause().getMessage());
-            }
-        });
-    }
-
-    private void handleDelete(RoutingContext ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
-        logger.debug("Received request to delete object with id: {}", id);
-
-        // Call service to delete object
-        objectService.deleteObject(id, res -> {
-            if (res.succeeded()) {
-                ctx.response().setStatusCode(200).end("Object deleted successfully");
-                logger.debug("Deleted object with id: {}", id);
-            } else {
-                ctx.response().setStatusCode(500).end("Failed to delete data from database");
-                logger.error("Failed to delete data from database: {}", res.cause().getMessage());
-            }
-        });
-    }
 
     public void setupMqttHandlers() {
 
@@ -129,6 +58,8 @@ public class ObjectController {
                handleRfidScan(message.payload());
             }else if("controller/color_sequence".equals(message.topicName())){
                 handleColorSequence(message.payload());
+            }else if ("controller/request_sequence".equals(message.topicName())) {
+                handleSequenceRequest(message.payload());
             }
         });
         mqttClient.subscribe("controller/connect", MqttQoS.EXACTLY_ONCE.value())
@@ -152,6 +83,13 @@ public class ObjectController {
         .onFailure(cause -> {
             logger.error("Failed to subscribe to controller/color_sequence topic: {}", cause.getMessage());
         });
+        mqttClient.subscribe("controller/request_sequence", MqttQoS.AT_LEAST_ONCE.value())
+            .onSuccess(packetId -> {
+                logger.info("Subscribed to controller/request_sequence topic successfully");
+            })
+            .onFailure(cause -> {
+                logger.error("Failed to subscribe to controller/request_sequence topic: {}", cause.getMessage());
+            });
     }  
 
 
@@ -254,13 +192,16 @@ private void handleRfidScan(Buffer payload) {
 }
 
 
-private static final int TOTAL_SEQUENCES = 50;
+private AtomicBoolean isWaitingForResponse = new AtomicBoolean(false);
+private JsonArray currentColorSequence;
+private AtomicInteger activePlayers = new AtomicInteger(0);
 
 private void handleGenerateSequence(RoutingContext routingContext) {
     // Retrieve the list of connected controllers
     objectService.getConnectedControllers(connectedControllersResult -> {
         if (connectedControllersResult.succeeded()) {
             List<String> connectedControllers = connectedControllersResult.result();
+            activePlayers.set(connectedControllers.size());
 
             if (connectedControllers.isEmpty()) {
                 routingContext.response()
@@ -270,7 +211,9 @@ private void handleGenerateSequence(RoutingContext routingContext) {
             }
 
             // Start the sequence generation and sending process
-            sendSequencesToControllers(connectedControllers, routingContext);
+            for (String controllerId : connectedControllers) {
+                sendNextSequence(controllerId);
+            }
 
         } else {
             routingContext.response()
@@ -281,34 +224,22 @@ private void handleGenerateSequence(RoutingContext routingContext) {
     });
 }
 
-private void sendSequencesToControllers(List<String> connectedControllers, RoutingContext routingContext) {
-    AtomicInteger sequenceCount = new AtomicInteger(0);
 
-    vertx.setPeriodic(100000, timerId -> {
-        if (sequenceCount.get() >= TOTAL_SEQUENCES) {
-            vertx.cancelTimer(timerId);
-            logger.info("Completed sending all sequences.");
-            return;
-        }
 
-        JsonArray colorSequence = objectService.generateColorSequence();
-        sendColorSequenceToControllers(connectedControllers, colorSequence);
+private void handleSequenceRequest(Buffer payload) {
+    String controllerId = payload.toString();
+    logger.debug("Received sequence request from controller: {}", controllerId);
 
-        // Handle response and validation for each sequence
-        handleSequenceResponse(connectedControllers, colorSequence, result -> {
-            if (result) {
-                sequenceCount.incrementAndGet();
-            } else {
-                logger.info("Controller failed to match the sequence, stopping further sequence sending.");
-                vertx.cancelTimer(timerId);
-                notifyControllerOfLoss(connectedControllers);
-            }
-        });
-    });
+    if (!isWaitingForResponse.get()) {
+        sendNextSequence(controllerId);
+    } else {
+        logger.debug("Waiting for response from previous sequence. Ignoring request.");
+    }
 }
 
-private void sendColorSequenceToControllers(List<String> connectedControllers, JsonArray colorSequence) {
-    String message = colorSequence.encode();
+private void sendNextSequence(String controllerId) {
+    currentColorSequence = objectService.generateColorSequence();
+    String message = currentColorSequence.encode();
     String topic = "neopixel/display";
 
     mqttClient.publish(topic,
@@ -318,52 +249,33 @@ private void sendColorSequenceToControllers(List<String> connectedControllers, J
         false,
         ar -> {
             if (ar.succeeded()) {
-                logger.info("Color sequence sent to all controllers: {}", message);
+                logger.info("Color sequence sent to controller {}: {}", controllerId, message);
+                isWaitingForResponse.set(true);
             } else {
-                logger.error("Failed to send color sequence to controllers", ar.cause());
+                logger.error("Failed to send color sequence to controller {}", controllerId, ar.cause());
             }
         });
 }
 
-private void handleSequenceResponse(List<String> connectedControllers, JsonArray sentSequence, Handler<Boolean> resultHandler) {
-    vertx.setTimer(10000, timerId -> {
-        JsonArray receivedSequence = simulateReceivingSequence(sentSequence);
-        handleColorSequence(Buffer.buffer(receivedSequence.encode()))  // Call directly
-            .onSuccess(isMatch -> {
-                if (isMatch) {
-                    resultHandler.handle(true);
-                } else {
-                    resultHandler.handle(false);
-                }
-            })
-            .onFailure(cause -> {
-                logger.error("Failed to handle sequence response: {}", cause.getMessage());
-                resultHandler.handle(false);
-            });
-    });
-}
+private void notifyControllerOfLoss(String controllerId) {
+    JsonObject lossMessage = new JsonObject()
+        .put("username", "Game Over")
+        .put("points", 0)
+        .put("round", 0)
+        .put("message", "You lost!");
 
-// This is a simulation method for the received sequence
-private JsonArray simulateReceivingSequence(JsonArray sentSequence) {
-    // In this simulation, we simply return the sent sequence as if it was correctly received.
-    // You can modify this method to simulate different scenarios (e.g., returning an incorrect sequence).
-    return sentSequence;
-}
-
-private void notifyControllerOfLoss(List<String> connectedControllers) {
-    String lossMessage = new JsonObject().put("message", "You lost! The sequence did not match.").encode();
-    String topic = "neopixel/loss";
+    String topic = "oled/display/" + controllerId;
 
     mqttClient.publish(topic,
-        Buffer.buffer(lossMessage),
+        Buffer.buffer(lossMessage.encode()),
         MqttQoS.AT_LEAST_ONCE,
         false,
         false,
         ar -> {
             if (ar.succeeded()) {
-                logger.info("Loss notification sent to controllers.");
+                logger.info("Loss notification sent to controller: {}", controllerId);
             } else {
-                logger.error("Failed to send loss notification to controllers", ar.cause());
+                logger.error("Failed to send loss notification to controller: {}", controllerId, ar.cause());
             }
         });
 }
@@ -391,17 +303,21 @@ public Future<Boolean> handleColorSequence(Buffer payload) {
                 promise.complete(true);
             } else {
                 logger.info("Sequence did not match for controller: {}", controllerId);
-                notifyControllerOfLoss(Collections.singletonList(controllerId));
-                promise.complete(false);
+                notifyControllerOfLoss(controllerId);
+                promise.complete(true);
             }
+            isWaitingForResponse.set(false);
+                promise.complete(isMatch);
         })
         .onFailure(cause -> {
             logger.error("Failed to compare sequence or update points: {}", cause.getMessage());
+            isWaitingForResponse.set(false);
             promise.fail(cause);
         });
 
     return promise.future();
 }
+
 
 public void sendDisplayInfoToController(String controllerId) {
     objectService.fetchDisplayInfo(controllerId) // Using objectService instance

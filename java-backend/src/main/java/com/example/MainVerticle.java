@@ -10,7 +10,7 @@ import com.example.controller.ObjectController;
 import com.example.repository.ObjectRepository;
 import com.example.service.ObjectService;
 
-import io.netty.handler.codec.mqtt.MqttQoS;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -21,8 +21,7 @@ import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.mqtt.MqttClient;
 import io.vertx.mqtt.MqttClientOptions;
 import io.vertx.sqlclient.PoolOptions;
-import io.vertx.core.Future;
-import io.vertx.core.buffer.Buffer;
+
 
 
 public class MainVerticle extends AbstractVerticle {
