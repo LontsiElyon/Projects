@@ -1,8 +1,4 @@
-CREATE TABLE IF NOT EXISTS objects (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    message VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+
 -- Table to store information about controllers
 CREATE TABLE Controllers (
     controller_id VARCHAR(50) PRIMARY KEY,  -- Unique identifier for each controller, serving as the primary key
@@ -16,6 +12,7 @@ CREATE TABLE Players (
     player_id INT AUTO_INCREMENT PRIMARY KEY,  -- Unique identifier for each player, auto-incremented
     user_name VARCHAR(100),  -- Name of the player
     rfid_tag VARCHAR(50) UNIQUE,  -- Unique RFID tag assigned to the player
+    high_score INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- Timestamp when the player record was created
 );
 
@@ -30,7 +27,7 @@ CREATE TABLE Sessions (
     round INT DEFAULT 1,  -- The current round within the session, defaulting to 1
 
     -- Composite unique key
-    UNIQUE KEY unique_session (controller_id, player_id, round),
+    UNIQUE KEY unique_session (controller_id, player_id,round),
 
     -- Foreign key relationships
     FOREIGN KEY (player_id) REFERENCES Players(player_id),  -- Establishes a relationship with the Players table
@@ -75,9 +72,11 @@ CREATE TABLE DisplayInfo (
     FOREIGN KEY (player_id) REFERENCES Players(player_id)  -- Reference to Players table
 );
 
+
 CREATE TABLE DisplayUpdates (
     update_id INT AUTO_INCREMENT PRIMARY KEY,  -- Unique identifier for each update
     controller_id VARCHAR(50),  -- Foreign key referencing Controllers table
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Timestamp of the update
     FOREIGN KEY (controller_id) REFERENCES Controllers(controller_id)  -- Reference to Controllers table
 );
+

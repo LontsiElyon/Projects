@@ -29,49 +29,6 @@ public class ObjectRepository {
         this.jdbcPool = jdbcPool;
     }
 
-    public void insertObject(String message, Handler<AsyncResult<Void>> resultHandler) {
-        // Execute insert query without preparing metadata
-        jdbcPool.query("INSERT INTO objects (message) VALUES ('" + message + "')")
-                .execute(ar -> {
-                    if (ar.succeeded()) {
-                        resultHandler.handle(Future.succeededFuture());
-                    } else {
-                        resultHandler.handle(Future.failedFuture(ar.cause()));
-                    }
-                });
-    }
-
-    public void fetchObjects(Handler<AsyncResult<RowSet<io.vertx.sqlclient.Row>>> resultHandler) {
-        // Execute select query
-        jdbcPool.query("SELECT * FROM objects")
-                .execute(resultHandler);
-    }
-
-    public void updateObject(int id, String message, Handler<AsyncResult<Void>> resultHandler) {
-        // Execute update query without preparing metadata
-        jdbcPool.query("UPDATE objects SET message = '" + message + "' WHERE id = " + id)
-                .execute(ar -> {
-                    if (ar.succeeded()) {
-                        resultHandler.handle(Future.succeededFuture());
-                    } else {
-                        resultHandler.handle(Future.failedFuture(ar.cause()));
-                    }
-                });
-    }
-
-    public void deleteObject(int id, Handler<AsyncResult<Void>> resultHandler) {
-        // Execute delete query without preparing metadata
-        jdbcPool.query("DELETE FROM objects WHERE id = " + id)
-                .execute(ar -> {
-                    if (ar.succeeded()) {
-                        resultHandler.handle(Future.succeededFuture());
-                    } else {
-                        resultHandler.handle(Future.failedFuture(ar.cause()));
-                    }
-                });
-    }
-
-
     public void insertController(String controllerId, Handler<AsyncResult<Void>> resultHandler) {
         // Prepare SQL statement to insert controller data
         String sql = "INSERT INTO Controllers (controller_id, status) VALUES (?, 'online') " +
@@ -192,17 +149,7 @@ public class ObjectRepository {
         jdbcPool.preparedQuery(sql)
                 .execute(Tuple.of(username), ar -> {
                     if (ar.succeeded()) {
-                        /*if (ar.result() == null) logger.info("Result is Null");
-                        logger.info("Result was {} long", ar.result().size());
-                        logger.info("Result was {}", ar.result().value());
-                        logger.info("Result was {} namws", ar.result().columnsNames());
-                        logger.info("Result was {} long", ar.result().rowCount());
-                        ar.result().forEach(r -> logger.info(r.toString()));*/
-                       // int playerIdLong = ar.result().property(PropertyKind.create("player_id", int.class)); // Retrieve the auto-incremented ID as Long
-                        //int playerId = playerIdLong != null ? playerIdLong.intValue() : -1; // Safely convert to int
-                        //logger.info("Player registered successfully with ID: {}", playerIdLong);
-
-                        // Successfully executed SQL, now get the auto-generated player ID
+                    // Successfully executed SQL, now get the auto-generated player ID
                        int playerID = ar.result().property(JDBCPool.GENERATED_KEYS).getInteger(0);
                       // Pass the player ID to the result handler
                        resultHandler.handle(Future.succeededFuture(playerID));
@@ -399,6 +346,7 @@ public class ObjectRepository {
             .onFailure(cause -> logger.error("Failed to insert DisplayInfo for controller {}: {}", controllerId, cause.getMessage()))
             .mapEmpty();
     }
+
     
     private Future<String> fetchUsernameByPlayerId(int playerId) {
         String query = "SELECT user_name FROM Players WHERE player_id = ?";
@@ -414,10 +362,10 @@ public class ObjectRepository {
             });
     }
 
-    public Future<JsonObject> fetchDisplayInfo(String controllerId) {
-        String query = "SELECT username, points, round FROM DisplayInfo WHERE controller_id = ?";
+    public Future<JsonObject> fetchDisplayInfo(String controllerId, int round) {
+        String query = "SELECT username, points, round FROM DisplayInfo WHERE controller_id = ? AND round = ?";
         return jdbcPool.preparedQuery(query)
-            .execute(Tuple.of(controllerId))
+            .execute(Tuple.of(controllerId, round))
             .map(rows -> {
                 if (rows.size() > 0) {
                     Row row = rows.iterator().next();
@@ -429,37 +377,115 @@ public class ObjectRepository {
                     return new JsonObject(); // Return an empty JsonObject if no rows are found
                 }
             })
-            .onFailure(cause -> logger.error("Failed to fetch display info for controller {}: {}", controllerId, cause.getMessage()));
+            .onFailure(cause -> logger.error("Failed to fetch display info for controller {} and round {}: {}", controllerId, round, cause.getMessage()));
     }
 
-    /*public Future<Void> resetPlayerState(String controllerId) {
-        // SQL to reset points and increment round in DisplayInfo
-        String updateDisplayInfoSql = "UPDATE DisplayInfo SET points = 0, round = round + 1 WHERE controller_id = ?";
+    public Future<Void> createNewRound(String controllerId) {
+        return jdbcPool.withTransaction(client -> {
+            // First, get the current session info
+            String getCurrentSessionQuery = "SELECT player_id, MAX(round) as current_round, login_method FROM Sessions WHERE controller_id = ? AND end_time IS NULL";
+            
+            return client.preparedQuery(getCurrentSessionQuery)
+                .execute(Tuple.of(controllerId))
+                .compose(rows -> {
+                    if (rows.iterator().hasNext()) {
+                        Row row = rows.iterator().next();
+                        int playerId = row.getInteger("player_id");
+                        int currentRound = row.getInteger("current_round");
+                        String loginMethod = row.getString("login_method");
+                        int newRound = currentRound + 1;
+    
+                        // Update the end time of the current round
+                        String updateEndTimeQuery = "UPDATE Sessions SET end_time = NOW() WHERE controller_id = ? AND player_id = ? AND round = ?";
+                        
+                        return client.preparedQuery(updateEndTimeQuery)
+                            .execute(Tuple.of(controllerId, playerId, currentRound))
+                            .compose(v -> {
+                                // Insert new session for the new round
+                                String insertNewSessionQuery = "INSERT INTO Sessions (controller_id, player_id, round, start_time, login_method) VALUES (?, ?, ?, NOW(), ?)";
+                                
+                                return client.preparedQuery(insertNewSessionQuery)
+                                    .execute(Tuple.of(controllerId, playerId, newRound, loginMethod));
+                            })
+                            .compose(v -> {
+                                // Insert new DisplayInfo for the new round
+                                String insertDisplayInfoQuery = "INSERT INTO DisplayInfo (controller_id, player_id, round, points, username) SELECT ?, ?, ?, 0, user_name FROM Players WHERE player_id = ?";
+                                
+                                return client.preparedQuery(insertDisplayInfoQuery)
+                                    .execute(Tuple.of(controllerId, playerId, newRound, playerId));
+                            });
+                    } else {
+                        return Future.failedFuture("No active session found for controller: " + controllerId);
+                    }
+                })
+                .mapEmpty();
+        });
+    }
+   
+
+    public Future<Integer> fetchCurrentRound(String controllerId) {
+        String query = "SELECT MAX(round) as current_round FROM Sessions WHERE controller_id = ? AND end_time IS NULL";
+        return jdbcPool.preparedQuery(query)
+            .execute(Tuple.of(controllerId))
+            .map(rows -> {
+                if (rows.size() > 0) {
+                    Row row = rows.iterator().next();
+                    return row.getInteger("current_round");
+                } else {
+                    return 0; // Default to 0 if no active session is found
+                }
+            });
+    }
+
+
+    public Future<Integer> fetchHighestScore(int playerId) {
+        String query = "SELECT MAX(points) as highest_score FROM DisplayInfo WHERE player_id = ?";
+        return jdbcPool.preparedQuery(query)
+            .execute(Tuple.of(playerId))
+            .map(rows -> {
+                if (rows.iterator().hasNext()) {
+                    return rows.iterator().next().getInteger("highest_score");
+                } else {
+                    return 0; // Return 0 if no scores are found
+                }
+            });
+    }
+
+    public Future<Void> updateHighScore(int playerId) {
+        return fetchHighestScore(playerId)
+            .compose(highestScore -> {
+                String updateQuery = "UPDATE Players SET high_score = ? WHERE player_id = ?";
+                return jdbcPool.preparedQuery(updateQuery)
+                    .execute(Tuple.of(highestScore, playerId))
+                    .mapEmpty();
+            });
+    }
+
+    public void getRoundWinner(Handler<AsyncResult<JsonObject>> resultHandler) {
+        String query = "SELECT username, points FROM DisplayInfo WHERE round = (SELECT MAX(round) FROM DisplayInfo) ORDER BY points DESC LIMIT 1";
         
-        // SQL to increment round in Sessions
-        String updateSessionSql = "UPDATE Sessions SET round = round + 1 WHERE controller_id = ? AND end_time IS NULL";
-        
-        Future<RowSet<Row>> updateDisplayInfo = jdbcPool.preparedQuery(updateDisplayInfoSql)
-        .execute(Tuple.of(controllerId));
-    
-        Future<RowSet<Row>> updateSession = jdbcPool.preparedQuery(updateSessionSql)
-            .execute(Tuple.of(controllerId));
-    
-    return Future.all(updateDisplayInfo, updateSession)
-          // This converts Future<List<Object>> to Future<Void>
-        .onSuccess(v -> logger.info("Player state reset for controller: {}", controllerId))
-        .onFailure(err -> logger.error("Failed to reset player state for controller {}: {}", controllerId, err.getMessage()))
-        .mapEmpty();
-    }*/
-
-    
-
-
-
-
-
-
-
+        // Use the jdbcPool to execute the query correctly
+        jdbcPool.preparedQuery(query).execute(ar -> {
+            if (ar.succeeded()) {
+                RowSet<Row> rows = ar.result();
+                if (rows.size() > 0) {
+                    // Extract the first row to get the winner details
+                    Row row = rows.iterator().next();
+                    JsonObject winner = new JsonObject()
+                        .put("name", row.getString("username"))
+                        .put("score", row.getInteger("points"));
+                    // Return the winner details as the result
+                    resultHandler.handle(Future.succeededFuture(winner));
+                } else {
+                    // No rows found, indicating no winner for the current round
+                    resultHandler.handle(Future.succeededFuture(new JsonObject().put("message", "No winner for this round yet.")));
+                }
+            } else {
+                // Query execution failed, return the cause of the failure
+                resultHandler.handle(Future.failedFuture(ar.cause()));
+            }
+        });
+    }
 
 
 }  

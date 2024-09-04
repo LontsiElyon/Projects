@@ -9,11 +9,11 @@
 #include <Adafruit_NeoPixel.h>
 
 // WiFi settings
-const char *ssid = "Apartment Y119" ;    // TODO: Change to your WiFi SSID   ""  "SmartFactoryLab"  Apartment Y119
-const char *password = "99704532092388225373"; // TODO: Change to your WiFi Passwordt  "99704532092388225373"  "smartfactorylab"
+const char *ssid = "iPhone von patso" ;    // TODO: Change to your WiFi SSID   ""  "SmartFactoryLab"  Apartment Y119
+const char *password = "123456789"; // TODO: Change to your WiFi Passwordt  "99704532092388225373"  "smartfactorylab"
 
 // MQTT settings
-const char *mqtt_server = "192.168.178.43"; // Laptop IP Address  192.168.50.199         192.168.178.43
+const char *mqtt_server = "172.20.10.4"; // Laptop IP Address  192.168.50.199         192.168.178.43
 const int mqtt_port = 1883;
 const char *mqtt_user = "sose24";
 const char *mqtt_password = "informatik";
@@ -161,6 +161,9 @@ void reconnect()
      if(client.subscribe("oled/display/controller_2")){
        Serial.println("Subscripted to Oled successfully");
      }
+     if(client.subscribe("controller/action/controller_2")) {
+        Serial.println("Subscribed to controller action topic successfully");
+    }
     }
     else{
       Serial.print("failed, rc=");
@@ -268,10 +271,35 @@ void displayPlayerInfo(const String& playerName, int points, int round) {
 
 }
 
+void displayGameOverMessage(int round) {
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SSD1306_WHITE);
+
+    // Display "Game Over!"
+    int16_t x1, y1;
+    uint16_t width, height;
+    display.getTextBounds("Game Over!", 0, 0, &x1, &y1, &width, &height);
+    int16_t xPos = (SCREEN_WIDTH - width) / 2;
+    display.setCursor(xPos, 10);
+    display.println("Game Over!");
+
+    // Display the final round
+    display.setTextSize(1);
+    String roundText = "Final Round: " + String(round);
+    display.getTextBounds(roundText, 0, 0, &x1, &y1, &width, &height);
+    xPos = (SCREEN_WIDTH - width) / 2;
+    display.setCursor(xPos, 40);
+    display.println(roundText);
+
+    display.display();
+    delay(5000); // Display for 5 seconds
+}
+
 
 
 void onSequenceReceived(int sequenceLength) {
-  inputWindowDuration = baseInputDuration + (sequenceLength * additionalTimePerColor);
+  inputWindowDuration = (baseInputDuration + (sequenceLength * additionalTimePerColor))/2;
   inputWindowStart = millis();
   Serial.print("Input window started for ");
   Serial.print(inputWindowDuration);
@@ -334,8 +362,6 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
             }
         }
 
-        // Start countdown before showing the sequence
-        startCountdown();
 
         // Show the received color sequence
         showColorSequence(colorSequence, sequenceLength);
@@ -344,28 +370,45 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
     // Handle the OLED display update
     if (String(topic) == "oled/display/controller_2") {
-    Serial.println("Displaying on OLED");
-    DynamicJsonDocument doc(512);
-    DeserializationError error = deserializeJson(doc, message);
+      Serial.println("Displaying on OLED");
+      DynamicJsonDocument doc(512);
+      DeserializationError error = deserializeJson(doc, message);
 
-    if (error) {
-        Serial.print("Failed to parse JSON: ");
-        Serial.println(error.c_str());
-        return;
+      if (error) {
+          Serial.print("Failed to parse JSON: ");
+          Serial.println(error.c_str());
+          return;
+      }
+
+      String username = doc["username"];
+      int points = doc["points"];
+      int round = doc["round"];
+      String gameMessage = doc["message"];
+
+      if (gameMessage == "You lost!") {
+          hasLost = true;
+          displayLossMessage();
+      }else if (gameMessage == "Game Over!") {
+            int finalRound = doc["round"];
+            gameStarted = false;
+            displayGameOverMessage(finalRound);
+      } else {
+          displayPlayerInfo(username, points, round);
+      }
+
     }
 
-    String username = doc["username"];
-    int points = doc["points"];
-    int round = doc["round"];
-    String gameMessage = doc["message"];
-
-    if (gameMessage == "You lost!") {
-        hasLost = true;
-        displayLossMessage();
-    } else {
-        displayPlayerInfo(username, points, round);
+    if (String(topic) == "controller/action/controller_2") {
+        DynamicJsonDocument doc(256);
+        DeserializationError error = deserializeJson(doc, message);
+        
+        if (!error) {
+            String action = doc["action"].as<String>();
+            if (action == "countdown") {
+                startCountdown();
+            }
+        }
     }
-}
 
 }
 

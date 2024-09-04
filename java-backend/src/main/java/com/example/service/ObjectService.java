@@ -238,11 +238,34 @@ public class ObjectService {
         return true;
     }
 
-    public Future<JsonObject> fetchDisplayInfo(String controllerId) {
-        return objectRepository.fetchDisplayInfo(controllerId);
+    public Future<JsonObject> fetchDisplayInfo(String controllerId,int currentRound) {
+        return objectRepository.fetchDisplayInfo(controllerId,currentRound);
     }
 
-    
+    public Future<Void> createNewRound(String controllerId) {
+        return objectRepository.createNewRound(controllerId);
+    }
 
+    public Future<Integer> fetchCurrentRound(String controllerId) {
+        return objectRepository.fetchCurrentRound(controllerId);
+    }
+
+    public void getRoundWinner(Handler<AsyncResult<JsonObject>> resultHandler) {
+        // Delegate the operation to the repository
+        objectRepository.getRoundWinner(resultHandler);
+    }
+
+    public Future<Void> updatePlayerHighScore(String controllerId) {
+        return objectRepository.fetchPlayerIdByControllerId(controllerId)
+            .compose(playerId -> {
+                if (playerId == null) {
+                    return Future.failedFuture("No player found for controller: " + controllerId);
+                }
+                return objectRepository.updateHighScore(playerId);
+            })
+            .onSuccess(v -> logger.info("High score updated for player with controller: {}", controllerId))
+            .onFailure(cause -> logger.error("Failed to update high score for player with controller: {}", controllerId, cause));
+    }
+    
 }
 
