@@ -7,10 +7,10 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.mqtt.MqttClient;
 import io.netty.handler.codec.mqtt.MqttQoS;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -119,6 +119,7 @@ public class ObjectController {
         objectService.registerController(controllerId, res -> {
             if (res.succeeded()) {
                 logger.info("Controller registered: {}", controllerId);
+                connectedControllers.add(controllerId);
                 // Optionally publish an acknowledgment back to the controller
                 mqttClient.publish("controller/ack", Buffer.buffer("Connected: " + controllerId), MqttQoS.AT_LEAST_ONCE, false, false);
             } else {
@@ -172,385 +173,418 @@ public class ObjectController {
         });
     }
 
-    // Handle incoming RFID scan messages
-private void handleRfidScan(Buffer payload) {
-    // Convert the payload to a string to get the RFID tag
-    String payloadStr = payload.toString();
-    JsonObject json = new JsonObject(payloadStr);
-    String controllerId = json.getString("controllerId");
-    String username = json.getString("username");
+        // Handle incoming RFID scan messages
+    private void handleRfidScan(Buffer payload) {
+        // Convert the payload to a string to get the RFID tag
+        String payloadStr = payload.toString();
+        JsonObject json = new JsonObject(payloadStr);
+        String controllerId = json.getString("controllerId");
+        String username = json.getString("username");
 
-    
-    // Log the received RFID scan for debugging purposes
-    logger.debug("Received RFID scan with tag: {}", payloadStr);
+        
+        // Log the received RFID scan for debugging purposes
+        logger.debug("Received RFID scan with tag: {}", payloadStr);
 
-    // Call the service method to register the player using the RFID tag
-    objectService.registerPlayerWithRfid(payloadStr, res -> {
-        if (res.succeeded()) {
-            // On success, log that the RFID scan was processed successfully
-            logger.info("RFID scan processed successfully for tag: {}", payloadStr);
+        // Call the service method to register the player using the RFID tag
+        objectService.registerPlayerWithRfid(payloadStr, res -> {
+            if (res.succeeded()) {
+                // On success, log that the RFID scan was processed successfully
+                logger.info("RFID scan processed successfully for tag: {}", payloadStr);
 
-            // Construct the message to notify the frontend
-            JsonObject message = new JsonObject()
-                .put("action", "controller_assigned")
-                .put("message", "Controller " + controllerId + " connected to " + username); // Message format
+                // Construct the message to notify the frontend
+                JsonObject message = new JsonObject()
+                    .put("action", "controller_assigned")
+                    .put("message", "Controller " + controllerId + " connected to " + username); // Message format
 
-            // Publish the message to the "frontend/notifications" topic
-            mqttClient.publish("frontend/notifications", Buffer.buffer(message.encode()), MqttQoS.AT_LEAST_ONCE, false, false);
+                // Publish the message to the "frontend/notifications" topic
+                mqttClient.publish("frontend/notifications", Buffer.buffer(message.encode()), MqttQoS.AT_LEAST_ONCE, false, false);
 
-        } else {
-            // On failure, log the error with the failure cause
-            logger.error("Failed to process RFID scan: {}", res.cause().getMessage());
-        }
-    });
-}
+            } else {
+                // On failure, log the error with the failure cause
+                logger.error("Failed to process RFID scan: {}", res.cause().getMessage());
+            }
+        });
+    }
 
 
-private AtomicBoolean isWaitingForResponse = new AtomicBoolean(false);
-private JsonArray currentColorSequence;
-private AtomicInteger activePlayers = new AtomicInteger(0);
-// Add a variable to track the number of rounds played
-private AtomicInteger roundsPlayed = new AtomicInteger(0);
+    private AtomicBoolean isWaitingForResponse = new AtomicBoolean(false);
+    private JsonArray currentColorSequence;
+    private AtomicInteger activePlayers = new AtomicInteger(0);
+    // Add a variable to track the number of rounds played
+    private AtomicInteger roundsPlayed = new AtomicInteger(0);
+    private List<String> connectedControllers = new ArrayList<>();
+    private List<String> controllersWaitingForSequence = new ArrayList<>();
 
-private void handleGenerateSequence(RoutingContext routingContext) {
-    // Retrieve the list of connected controllers
-    objectService.getConnectedControllers(connectedControllersResult -> {
-        if (connectedControllersResult.succeeded()) {
-            List<String> connectedControllers = connectedControllersResult.result();
-            activePlayers.set(connectedControllers.size());
+    private void handleGenerateSequence(RoutingContext routingContext) {
+        // Retrieve the list of connected controllers
+        objectService.getConnectedControllers(connectedControllersResult -> {
+            if (connectedControllersResult.succeeded()) {
+                List<String> connectedControllers = connectedControllersResult.result();
+                activePlayers.set(connectedControllers.size());
 
-            if (connectedControllers.isEmpty()) {
+                if (connectedControllers.isEmpty()) {
+                    routingContext.response()
+                        .setStatusCode(200)
+                        .end(new JsonObject().put("message", "No connected controllers associated with users").encode());
+                    return;
+                }
+
+                // Send countdown and start the first round
+                sendCountdownToAllControllers(connectedControllers);
+                // Start the sequence generation and sending process
+                
+                try {
+                    sendNextSequence(connectedControllers);
+                    routingContext.response()
+                        .setStatusCode(200)
+                        .end(new JsonObject().put("message", "Game sequence generation started").encode());
+                } catch (Exception e) {
+                    logger.error("Error while generating sequence: ", e);
+                    routingContext.response()
+                        .setStatusCode(500)
+                        .end(new JsonObject().put("error", "Failed to start sequence generation").encode());
+                }
+                
+            } else {
                 routingContext.response()
-                    .setStatusCode(200)
-                    .end(new JsonObject().put("message", "No connected controllers associated with users").encode());
-                return;
+                    .setStatusCode(500)
+                    .end(new JsonObject().put("error", "Failed to retrieve connected controllers").encode());
+                logger.error("Failed to retrieve connected controllers", connectedControllersResult.cause());
             }
-
-            // Send countdown and start the first round
-            sendCountdownToAllControllers(connectedControllers);
-            // Start the sequence generation and sending process
-            for (String controllerId : connectedControllers) {
-                sendNextSequence(controllerId);
-            }
-            
-        } else {
-            routingContext.response()
-                .setStatusCode(500)
-                .end(new JsonObject().put("error", "Failed to retrieve connected controllers").encode());
-            logger.error("Failed to retrieve connected controllers", connectedControllersResult.cause());
-        }
-    });
-}
+        });
+    }
 
 
 
-private void handleSequenceRequest(Buffer payload) {
+    private void handleSequenceRequest(Buffer payload) {
     String controllerId = payload.toString();
     logger.debug("Received sequence request from controller: {}", controllerId);
 
-    if (!isWaitingForResponse.get()) {
-        sendNextSequence(controllerId);
-    } else {
-        logger.debug("Waiting for response from previous sequence. Ignoring request.");
+    // Add the controller to the list of controllers waiting for the sequence
+    controllersWaitingForSequence.add(controllerId);
+
+        // If we're not already waiting for a response, start the sequence generation process
+        if (!isWaitingForResponse.get()) {
+            isWaitingForResponse.set(true);
+            sendNextSequence(Arrays.asList(controllerId));
+        }
     }
-}
 
-private void sendNextSequence(String controllerId) {
-    currentColorSequence = objectService.generateColorSequence();
-    String message = currentColorSequence.encode();
-    String topic = "neopixel/display";
+    private Future<Void> sendNextSequence(List<String> controllers) {
+        List<Future<Void>> futures = new ArrayList<>();
+        currentColorSequence = objectService.generateColorSequence();
+        String message = currentColorSequence.encode();
+        String topic = "neopixel/display";
+    
+        for (String controllerId : controllers) {
+            Promise<Void> promise = Promise.promise();
+            mqttClient.publish(topic,
+                Buffer.buffer(message),
+                MqttQoS.AT_LEAST_ONCE,
+                false,
+                false,
+                ar -> {
+                    if (ar.succeeded()) {
+                        logger.info("Color sequence sent to controller {}: {}", controllerId, message);
+                        promise.complete();
+                    } else {
+                        logger.error("Failed to send color sequence to controller {}", controllerId, ar.cause());
+                        promise.fail(ar.cause());
+                    }
+                });
+            futures.add(promise.future());
+        }
+    
+        return Future.all(futures).mapEmpty();
+    }
 
-    mqttClient.publish(topic,
-        Buffer.buffer(message),
-        MqttQoS.AT_LEAST_ONCE,
-        false,
-        false,
-        ar -> {
-            if (ar.succeeded()) {
-                logger.info("Color sequence sent to controller {}: {}", controllerId, message);
-                isWaitingForResponse.set(true);
-            } else {
-                logger.error("Failed to send color sequence to controller {}", controllerId, ar.cause());
-            }
-        });
-}
+    private void notifyControllerOfLoss(String controllerId) {
+        JsonObject lossMessage = new JsonObject()
+            .put("username", "Game Over")
+            .put("points", 0)
+            .put("round", 0)
+            .put("message", "You lost!");
 
-private void notifyControllerOfLoss(String controllerId) {
-    JsonObject lossMessage = new JsonObject()
-        .put("username", "Game Over")
-        .put("points", 0)
-        .put("round", 0)
-        .put("message", "You lost!");
+        String topic = "oled/display/" + controllerId;
 
-    String topic = "oled/display/" + controllerId;
+        mqttClient.publish(topic,
+            Buffer.buffer(lossMessage.encode()),
+            MqttQoS.AT_LEAST_ONCE,
+            false,
+            false,
+            ar -> {
+                if (ar.succeeded()) {
+                    logger.info("Loss notification sent to controller: {}", controllerId);
+                } else {
+                    logger.error("Failed to send loss notification to controller: {}", controllerId, ar.cause());
+                }
+            });
+    }
 
-    mqttClient.publish(topic,
-        Buffer.buffer(lossMessage.encode()),
-        MqttQoS.AT_LEAST_ONCE,
-        false,
-        false,
-        ar -> {
-            if (ar.succeeded()) {
-                logger.info("Loss notification sent to controller: {}", controllerId);
-            } else {
-                logger.error("Failed to send loss notification to controller: {}", controllerId, ar.cause());
-            }
-        });
-}
+    public Future<Boolean> handleColorSequence(Buffer payload) {
+        Promise<Boolean> promise = Promise.promise();
 
-public Future<Boolean> handleColorSequence(Buffer payload) {
-    Promise<Boolean> promise = Promise.promise();
+        JsonObject payloadJson = payload.toJsonObject();
+        String controllerId = payloadJson.getString("controllerId");
+        JsonArray receivedSequence = payloadJson.getJsonArray("sequence");
 
-    JsonObject payloadJson = payload.toJsonObject();
-    String controllerId = payloadJson.getString("controllerId");
-    JsonArray receivedSequence = payloadJson.getJsonArray("sequence");
+        if (controllerId == null || receivedSequence == null) {
+            logger.error("Invalid payload: controllerId or sequence is missing");
+            promise.complete(false);
+            return promise.future();
+        }
 
-    if (controllerId == null || receivedSequence == null) {
-        logger.error("Invalid payload: controllerId or sequence is missing");
-        promise.complete(false);
+        logger.debug("Received sequence for controller {}: {}", controllerId, receivedSequence.encode());
+
+        objectService.compareSequenceAndAwardPoints(controllerId, receivedSequence)
+            .onSuccess(isMatch -> {
+                if (isMatch) {
+                    logger.info("Sequence match! Points updated for controller: {}", controllerId);
+                    sendDisplayInfoToController(controllerId);
+                    promise.complete(true);
+                } else {
+                    logger.info("Sequence did not match for controller: {}", controllerId);
+                    notifyControllerOfLoss(controllerId);
+                    handlePlayerLoss(controllerId);
+                    promise.complete(true);
+                }
+                isWaitingForResponse.set(false);
+                    promise.complete(isMatch);
+            })
+            .onFailure(cause -> {
+                logger.error("Failed to compare sequence or update points: {}", cause.getMessage());
+                isWaitingForResponse.set(false);
+                promise.fail(cause);
+            });
+
         return promise.future();
     }
 
-    logger.debug("Received sequence for controller {}: {}", controllerId, receivedSequence.encode());
-
-    objectService.compareSequenceAndAwardPoints(controllerId, receivedSequence)
-        .onSuccess(isMatch -> {
-            if (isMatch) {
-                logger.info("Sequence match! Points updated for controller: {}", controllerId);
-                sendDisplayInfoToController(controllerId);
-                promise.complete(true);
-            } else {
-                logger.info("Sequence did not match for controller: {}", controllerId);
-                notifyControllerOfLoss(controllerId);
-                handlePlayerLoss(controllerId);
-                promise.complete(true);
-            }
-            isWaitingForResponse.set(false);
-                promise.complete(isMatch);
-        })
-        .onFailure(cause -> {
-            logger.error("Failed to compare sequence or update points: {}", cause.getMessage());
-            isWaitingForResponse.set(false);
-            promise.fail(cause);
-        });
-
-    return promise.future();
-}
-
-private void handlePlayerLoss(String controllerId) {
-    int remainingPlayers = activePlayers.decrementAndGet();
-    logger.info("Player lost: {}. Remaining players: {}", controllerId, remainingPlayers);
+    private void handlePlayerLoss(String controllerId) {
+        int remainingPlayers = activePlayers.decrementAndGet();
+        logger.info("Player lost: {}. Remaining players: {}", controllerId, remainingPlayers);
     
-    if (remainingPlayers <= 0) {
-        startNewRound();
-    } else {
-        logger.info("Waiting for other players to complete their turns.");
-    }
-} 
-
-private void handlePlayerStatus(Buffer payload) {
-    JsonObject payloadJson = payload.toJsonObject();
-    String controllerId = payloadJson.getString("controllerId");
-    String status = payloadJson.getString("status");
-
-    if (controllerId == null || status == null) {
-        logger.error("Invalid payload: controllerId or status is missing");
-        return;
-    }
-
-    if ("lost".equals(status)) {
-        handlePlayerLoss(controllerId);
-    } else {
-        logger.warn("Unrecognized status '{}' for controller {}", status, controllerId);
-    }
-}
-
-private void startNewRound() {
-    logger.info("All players have lost. Starting a new round.");
-
-    // Increment the round counter
-    int currentRound = roundsPlayed.incrementAndGet();
-    logger.info("Starting round number: {}", currentRound);
-
-    // Check if the round limit has been reached
-    if (currentRound > 5) {
-        stopGame();
-        return;
-    }
-
-    objectService.getConnectedControllers(ar -> {
-        if (ar.succeeded()) {
-            List<String> connectedControllers = ar.result();
-            activePlayers.set(connectedControllers.size());
-            
-            // Send countdown signal to all controllers
-            sendCountdownToAllControllers(connectedControllers)
-                .compose(v -> {
-                    // Wait for 4 seconds (3 second countdown + 1 second "GO!")
-                    Promise<Void> timerPromise = Promise.promise();
-                    vertx.setTimer(4000, id -> {
-                        timerPromise.complete();
-                    });
-                    return timerPromise.future();
-                })
-                .compose(v -> {
-                    List<Future<Void>> futures = new ArrayList<>();
-                    for (String controllerId : connectedControllers) {
-                        futures.add(objectService.createNewRound(controllerId)
-                            .compose(v2 -> {
-                                sendNextSequence(controllerId);
-                                return Future.succeededFuture();
-                            }));
-                    }
-                    return Future.all(futures);
-                })
-                .onSuccess(v -> {
-                    logger.info("New round started successfully for all controllers");
-                })
-                .onFailure(cause -> {
-                    logger.error("Failed to start new round", cause);
-                });
+        // Remove the disconnected controller from the connectedControllers list
+        connectedControllers.remove(controllerId);
+    
+        if (remainingPlayers <= 0 || connectedControllers.isEmpty()) {
+            startNewRound();
         } else {
-            logger.error("Failed to retrieve connected controllers for new round", ar.cause());
+            logger.info("Waiting for other players to complete their turns.");
         }
-    });
-}
+    } 
 
-private Future<Void> sendCountdownToAllControllers(List<String> controllers) {
-    List<Future<Void>> futures = new ArrayList<>();
-    for (String controllerId : controllers) {
-        futures.add(sendCountdown(controllerId));
+    private void handlePlayerStatus(Buffer payload) {
+        JsonObject payloadJson = payload.toJsonObject();
+        String controllerId = payloadJson.getString("controllerId");
+        String status = payloadJson.getString("status");
+
+        if (controllerId == null || status == null) {
+            logger.error("Invalid payload: controllerId or status is missing");
+            return;
+        }
+
+        if ("lost".equals(status)) {
+            handlePlayerLoss(controllerId);
+        } else {
+            logger.warn("Unrecognized status '{}' for controller {}", status, controllerId);
+        }
     }
-    return Future.all(futures).mapEmpty();
-}
 
-private Future<Void> sendCountdown(String controllerId) {
-    Promise<Void> promise = Promise.promise();
-    JsonObject countdownMessage = new JsonObject().put("action", "countdown");
-    String topic = "controller/action/" + controllerId;
-
-    mqttClient.publish(topic,
-        Buffer.buffer(countdownMessage.encode()),
-        MqttQoS.AT_LEAST_ONCE,
-        false,
-        false,
-        ar -> {
+    // New method to handle fetching round winner
+    private void handleFetchRoundWinner(RoutingContext ctx) {
+        objectService.getRoundWinner(ar -> {
             if (ar.succeeded()) {
-                logger.info("Countdown signal sent to controller: {}", controllerId);
-                promise.complete();
+                JsonObject winner = ar.result();
+                if (winner != null) {
+                    int round = winner.getInteger("round");
+                    String name = winner.getString("name");
+                    ctx.response()
+                        .putHeader("content-type", "application/json")
+                        .end(new JsonObject()
+                             .put("round", round)
+                             .put("name", name)
+                             .encode());
+                    logger.info("Fetched round winner: Round {}, {} (Score: {})", round, name);
+                } else {
+                    ctx.response()
+                        .putHeader("content-type", "application/json")
+                        .end(new JsonObject().put("message", "No winner for this round yet.").encode());
+                    logger.info("No winner for this round yet.");
+                }
             } else {
-                logger.error("Failed to send countdown signal to controller: {}", controllerId, ar.cause());
-                promise.fail(ar.cause());
+                ctx.response()
+                    .setStatusCode(500)
+                    .end("Failed to fetch round winner");
+                logger.error("Failed to fetch round winner: {}", ar.cause().getMessage());
             }
         });
-    return promise.future();
-}
+    }
 
+    private void startNewRound() {
+    
+        logger.info("All players have lost. Starting a new round.");
 
-public void sendDisplayInfoToController(String controllerId) {
-    // First, fetch the current round
-    objectService.fetchCurrentRound(controllerId)
-        .compose(currentRound -> 
-            // Then fetch the display info for that round
-            objectService.fetchDisplayInfo(controllerId, currentRound)
-        )
-        .onSuccess(displayInfo -> {
-            if (displayInfo != null && !displayInfo.isEmpty()) {
-                String message = displayInfo.encode();
-                String topic = "oled/display/" + controllerId;
+        // Increment the round counter
+        int currentRound = roundsPlayed.incrementAndGet();
+        logger.info("Starting round number: {}", currentRound);
+
+        // Check if the round limit has been reached
+        if (currentRound > 4) {
+            stopGame();
+            return;
+        }
+
+        objectService.getConnectedControllers(ar -> {
+            if (ar.succeeded()) {
+                List<String> connectedControllers = ar.result();
+                activePlayers.set(connectedControllers.size());
                 
-                mqttClient.publish(topic,
-                    Buffer.buffer(message),
-                    MqttQoS.AT_LEAST_ONCE,
-                    false,
-                    false,
-                    ar -> {
-                        if (ar.succeeded()) {
-                            logger.info("Display info sent to controller {}: {}", controllerId, message);
-                        } else {
-                            logger.error("Failed to send display info to controller {}: {}", controllerId, ar.cause());
+                // Send countdown signal to all controllers
+                sendCountdownToAllControllers(connectedControllers)
+                    .compose(v -> {
+                        // Wait for 4 seconds (3 second countdown + 1 second "GO!")
+                        Promise<Void> timerPromise = Promise.promise();
+                        vertx.setTimer(4000, id -> {
+                            timerPromise.complete();
+                        });
+                        return timerPromise.future();
+                    })
+                    .compose(v -> {
+                        List<Future<Void>> futures = new ArrayList<>();
+                        for (String controllerId : connectedControllers) {
+                            futures.add(objectService.createNewRound(controllerId)
+                                .compose(v2 -> {
+                                    sendNextSequence(connectedControllers);
+                                    return Future.succeededFuture();
+                                }));
                         }
+                        return Future.all(futures);
+                    })
+                    .onSuccess(v -> {
+                        logger.info("New round started successfully for all controllers");
+                    })
+                    .onFailure(cause -> {
+                        logger.error("Failed to start new round", cause);
                     });
             } else {
-                logger.error("No display info found for controller {}", controllerId);
+                logger.error("Failed to retrieve connected controllers for new round", ar.cause());
             }
-        })
-        .onFailure(cause -> logger.error("Failed to fetch display info: {}", cause.getMessage()));
-}
+        });
+    }
 
-// New method to handle fetching round winner
-private void handleFetchRoundWinner(RoutingContext ctx) {
-    objectService.getRoundWinner(ar -> {
-        if (ar.succeeded()) {
-            JsonObject winner = ar.result();
-            if (winner != null) {
-                ctx.response()
-                    .putHeader("content-type", "application/json")
-                    .end(winner.encode());
-                logger.info("Fetched round winner: {}", winner.encode());
-            } else {
-                ctx.response()
-                    .putHeader("content-type", "application/json")
-                    .end(new JsonObject().put("message", "No winner for this round yet.").encode());
-                logger.info("No winner for this round yet.");
-            }
-        } else {
-            ctx.response()
-                .setStatusCode(500)
-                .end("Failed to fetch round winner");
-            logger.error("Failed to fetch round winner: {}", ar.cause().getMessage());
+    private Future<Void> sendCountdownToAllControllers(List<String> controllers) {
+        List<Future<Void>> futures = new ArrayList<>();
+        for (String controllerId : controllers) {
+            futures.add(sendCountdown(controllerId));
         }
-    });
-}
+        return Future.all(futures).mapEmpty();
+    }
 
-private void stopGame() {
-    logger.info("Game has reached 5 rounds. Stopping the game.");
-    
-    objectService.getConnectedControllers(ar -> {
-        if (ar.succeeded()) {
-            List<String> connectedControllers = ar.result();
-            List<Future<Void>> futures = new ArrayList<>();
-            
-            for (String controllerId : connectedControllers) {
-                notifyControllerOfGameEnd(controllerId);
-                // Assuming updatePlayerHighScore returns Future<Void>
-                futures.add(objectService.updatePlayerHighScore(controllerId));
-            }
-            
-            Future.all(futures).onComplete(result -> {
-                if (result.succeeded()) {
-                    logger.info("Game ended and high scores updated for all players.");
+    private Future<Void> sendCountdown(String controllerId) {
+        Promise<Void> promise = Promise.promise();
+        JsonObject countdownMessage = new JsonObject().put("action", "countdown");
+        String topic = "controller/action/" + controllerId;
+
+        mqttClient.publish(topic,
+            Buffer.buffer(countdownMessage.encode()),
+            MqttQoS.AT_LEAST_ONCE,
+            false,
+            false,
+            ar -> {
+                if (ar.succeeded()) {
+                    logger.info("Countdown signal sent to controller: {}", controllerId);
+                    promise.complete();
                 } else {
-                    logger.error("Error occurred while updating high scores", result.cause());
+                    logger.error("Failed to send countdown signal to controller: {}", controllerId, ar.cause());
+                    promise.fail(ar.cause());
                 }
             });
-        } else {
-            logger.error("Failed to get connected controllers", ar.cause());
-        }
-    });
-}
+        return promise.future();
+    }
 
-// Method to notify a specific controller that the game has ended
-private void notifyControllerOfGameEnd(String controllerId) {
-    JsonObject endGameMessage = new JsonObject()
-        .put("round", roundsPlayed.get())
-        .put("message", "Game Over!");
 
-    String topic = "oled/display/" + controllerId;
+    public void sendDisplayInfoToController(String controllerId) {
+        // First, fetch the current round
+        objectService.fetchCurrentRound(controllerId)
+            .compose(currentRound -> 
+                // Then fetch the display info for that round
+                objectService.fetchDisplayInfo(controllerId, currentRound)
+            )
+            .onSuccess(displayInfo -> {
+                if (displayInfo != null && !displayInfo.isEmpty()) {
+                    String message = displayInfo.encode();
+                    String topic = "oled/display/" + controllerId;
+                    
+                    mqttClient.publish(topic,
+                        Buffer.buffer(message),
+                        MqttQoS.AT_LEAST_ONCE,
+                        false,
+                        false,
+                        ar -> {
+                            if (ar.succeeded()) {
+                                logger.info("Display info sent to controller {}: {}", controllerId, message);
+                            } else {
+                                logger.error("Failed to send display info to controller {}: {}", controllerId, ar.cause());
+                            }
+                        });
+                } else {
+                    logger.error("No display info found for controller {}", controllerId);
+                }
+            })
+            .onFailure(cause -> logger.error("Failed to fetch display info: {}", cause.getMessage()));
+    }
 
-    mqttClient.publish(topic,
-        Buffer.buffer(endGameMessage.encode()),
-        MqttQoS.AT_LEAST_ONCE,
-        false,
-        false,
-        ar -> {
+    
+
+    private void stopGame() {
+        logger.info("Game has reached 5 rounds. Stopping the game.");
+        
+        objectService.getConnectedControllers(ar -> {
             if (ar.succeeded()) {
-                logger.info("Game end notification sent to controller: {}", controllerId);
+                List<String> connectedControllers = ar.result();
+                List<Future<Void>> futures = new ArrayList<>();
+                
+                for (String controllerId : connectedControllers) {
+                    notifyControllerOfGameEnd(controllerId);
+                    // Assuming updatePlayerHighScore returns Future<Void>
+                    futures.add(objectService.updatePlayerHighScore(controllerId));
+                }
+                
+                Future.all(futures).onComplete(result -> {
+                    if (result.succeeded()) {
+                        logger.info("Game ended and high scores updated for all players.");
+                    } else {
+                        logger.error("Error occurred while updating high scores", result.cause());
+                    }
+                });
             } else {
-                logger.error("Failed to send game end notification to controller: {}", controllerId, ar.cause());
+                logger.error("Failed to get connected controllers", ar.cause());
             }
         });
-}
+    }
+
+    // Method to notify a specific controller that the game has ended
+    private void notifyControllerOfGameEnd(String controllerId) {
+        JsonObject endGameMessage = new JsonObject()
+            .put("round", roundsPlayed.get())
+            .put("message", "Game Over!");
+
+        String topic = "oled/display/" + controllerId;
+
+        mqttClient.publish(topic,
+            Buffer.buffer(endGameMessage.encode()),
+            MqttQoS.AT_LEAST_ONCE,
+            false,
+            false,
+            ar -> {
+                if (ar.succeeded()) {
+                    logger.info("Game end notification sent to controller: {}", controllerId);
+                } else {
+                    logger.error("Failed to send game end notification to controller: {}", controllerId, ar.cause());
+                }
+            });
+    }
 
 
 }

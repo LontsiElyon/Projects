@@ -21,8 +21,8 @@ public class ObjectService {
     private final ObjectRepository objectRepository;
     private static final List<String> COLORS = List.of("RED", "GREEN", "BLUE", "YELLOW");
     private final Random random = new Random();
-    private final int minSequenceLength = 3; // Minimum sequence length
-    private final int maxSequenceLength = 6; // Maximum sequence length
+    private final int minSequenceLength = 1; // Minimum sequence length
+    private final int maxSequenceLength = 4; // Maximum sequence length
 
     public ObjectService(ObjectRepository objectRepository) {
         this.objectRepository = objectRepository;

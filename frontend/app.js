@@ -76,9 +76,11 @@ $(document).ready(function() {
         $.ajax({
             url: '/api/round-winner',
             method: 'GET',
+            dataType: 'json',
             success: function(response) {
-                if (response.name && response.score !== undefined) {
-                    $('#info-display').html(`<p>Round Winner: ${response.name} (Score: ${response.score})</p>`);
+                console.log('Round winner response:', response); // Debug log
+                if (response.round !== undefined && response.name) {
+                    $('#info-display').html(`<p>Round ${response.round} Winner: ${response.name}</p>`);
                 } else if (response.message) {
                     $('#info-display').html(`<p>${response.message}</p>`);
                 } else {
@@ -86,29 +88,29 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr, status, error) {
-                $('#info-display').html('<p>Failed to fetch round winner.</p>');
-                console.error('Error:', error);
+                console.error('Failed to fetch round winner:', error);
+                $('#info-display').html('<p>Failed to fetch round winner. Retrying...</p>');
             }
         });
     }
 
     let winnerPollingInterval;
 
-function startWinnerPolling() {
-    // Clear any existing interval
-    if (winnerPollingInterval) {
-        clearInterval(winnerPollingInterval);
+    function startWinnerPolling() {
+        // Clear any existing interval
+        stopWinnerPolling();
+        
+        // Start polling every 5 seconds
+        winnerPollingInterval = setInterval(fetchRoundWinner, 5000);
+        // Fetch immediately on start
+        fetchRoundWinner();
     }
-    
-    // Start polling every 5 seconds
-    winnerPollingInterval = setInterval(fetchRoundWinner, 5000);
-}
 
-function stopWinnerPolling() {
-    if (winnerPollingInterval) {
-        clearInterval(winnerPollingInterval);
+    function stopWinnerPolling() {
+        if (winnerPollingInterval) {
+            clearInterval(winnerPollingInterval);
+        }
     }
-}
 
 
 });

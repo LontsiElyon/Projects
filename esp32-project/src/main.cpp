@@ -7,39 +7,25 @@
 #include <Adafruit_SSD1306.h>
 #include <ArduinoJson.h>
 #include <Adafruit_NeoPixel.h>
+#include "display.h"
+#include "rfid.h"
 
 // WiFi settings
-const char *ssid = "iPhone von patso" ;    // TODO: Change to your WiFi SSID   ""  "SmartFactoryLab"  Apartment Y119
-const char *password = "123456789"; // TODO: Change to your WiFi Passwordt  "99704532092388225373"  "smartfactorylab"
+const char *ssid = "Apartment Y119" ;    // TODO: Change to your WiFi SSID   ""  "SmartFactoryLab"  Apartment Y119
+const char *password = "99704532092388225373"; // TODO: Change to your WiFi Passwordt  "99704532092388225373"  "smartfactorylab"
 
 // MQTT settings
-const char *mqtt_server = "172.20.10.4"; // Laptop IP Address  192.168.50.199         192.168.178.43
+const char *mqtt_server = "192.168.178.43"; // Laptop IP Address  192.168.50.199         192.168.178.43
 const int mqtt_port = 1883;
 const char *mqtt_user = "sose24";
 const char *mqtt_password = "informatik";
 
-
-
-// Define the OLED display width and height
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-
-// Define the I2C address for the SSD1306 display
-#define OLED_I2C_ADDRESS 0x3C // 0x3C is the default for most OLEDs, use 0x3D if needed
-
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 #define SS_PIN 5
 #define RST_PIN 4 
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-#define NEOPIXEL_PIN 15
-#define NUMPIXELS 2 
-
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_RGB + NEO_KHZ800);
 
 const uint8_t ledPins[] = {32, 25, 27, 12};
 const uint8_t buttonPins[] = {33, 26, 14, 13};
@@ -47,10 +33,15 @@ const uint8_t buttonPins[] = {33, 26, 14, 13};
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+#define NEOPIXEL_PIN 15
+#define NUMPIXELS 2 
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_RGB + NEO_KHZ800);
+
 
 bool controllerIdPublished = false; // Flag to check if the controller ID has been published
 uint32_t colorSequence[100];
-//String sequenceColor = "";
+
 
 // Define some colors
 #define COLOR_RED    strip.Color(255, 0, 0)
@@ -95,6 +86,13 @@ bool hasLost = false;
 bool sequenceEntered = false;
 const int maxSequenceLength = 20;
 bool gameStarted = false;
+String controllerId;
+
+// Define the LWT topic and message
+const char* willTopic = "controller/status";
+const char* willMessage = "offline";  // Message to be sent if client disconnects unexpectedly
+int willQoS = 1;
+bool willRetain = true;
 
 // Array to store the sequence of colors
 uint32_t sequenceColor[100];  // Assuming a maximum of 20 colors in the sequence
@@ -142,28 +140,80 @@ void setup_wifi()
   Serial.println(WiFi.localIP());
 }
 
+bool initializeControllerId() {
+    if (!controllerIdPublished) {
+        Serial.println("Initializing and Publishing Controller ID");
 
+        // Generate a unique ID for the device
+        char ssid[23];
+        snprintf(ssid, sizeof(ssid), "Controller-%llX", ESP.getEfuseMac());
+        controllerId = String(ssid);  // Assign the result to controllerId
 
+        Serial.println("Generated Controller ID: " + controllerId);
 
+        // Publish the controller ID to the MQTT server
+        if (client.publish("controller/connect", controllerId.c_str())) {
+            Serial.println("Controller ID published successfully.");
+            controllerIdPublished = true;  // Mark it as published
+            return true;
+        } else {
+            Serial.println("Failed to publish Controller ID.");
+            return false;
+        }
+    }
+    return false;
+}
 
 void reconnect()
 {
   while (!client.connected())
   {
     Serial.print("Attempting MQTT connection...");
-    if (client.connect("ESP32Client", mqtt_user, mqtt_password))
+    
+    if (client.connect("ESP32Client", mqtt_user, mqtt_password, willTopic, willQoS, willRetain, willMessage))
     {
       Serial.println("connected");
       //client.subscribe("player/update"); // Subscribe to the player/update topic
      if(client.subscribe("neopixel/display")) {
        Serial.println("Subscripted to neopixel successfully");
      }
-     if(client.subscribe("oled/display/controller_2")){
-       Serial.println("Subscripted to Oled successfully");
-     }
-     if(client.subscribe("controller/action/controller_2")) {
-        Serial.println("Subscribed to controller action topic successfully");
-    }
+        // Publish Controller ID if not already done
+            if (!controllerIdPublished) {
+                if (initializeControllerId()) {
+                    Serial.println("Controller ID published and ready for subscriptions.");
+                } else {
+                    Serial.println("Waiting for Controller ID to be published...");
+                }
+            }
+
+      // Make sure `controllerId` is already initialized
+            if (controllerIdPublished) {
+                // Subscribe to the OLED display topic
+                String oledTopic = "oled/display/" + controllerId;
+                if (client.subscribe(oledTopic.c_str())) {
+                    Serial.println("Subscribed to OLED topic: " + oledTopic);
+                } else {
+                    Serial.println("Failed to subscribe to OLED topic: " + oledTopic);
+                }
+
+                // Subscribe to controller action specific topic
+                String actionTopic = "controller/action/" + controllerId;
+                if (client.subscribe(actionTopic.c_str())) {
+                    Serial.println("Subscribed to action topic: " + actionTopic);
+                } else {
+                    Serial.println("Failed to subscribe to action topic: " + actionTopic);
+                }
+            } else {
+                Serial.println("Controller ID not yet published, cannot subscribe.");
+            }
+
+
+            // Publish online status to inform other clients
+           if (client.publish(willTopic, "online", true)) {
+             Serial.println("Published online status.");
+            }
+
+            
     }
     else{
       Serial.print("failed, rc=");
@@ -174,130 +224,6 @@ void reconnect()
   }
 }
 
-void displayLossMessage() {
-    display.clearDisplay();
-    display.setTextSize(2);
-    display.setTextColor(SSD1306_WHITE);
-
-    int16_t x1, y1;
-    uint16_t width, height;
-
-    display.getTextBounds("YOU LOST!", 0, 0, &x1, &y1, &width, &height);
-    int16_t xPos = (SCREEN_WIDTH - width) / 2;
-    int16_t yPos = 15;
-    display.setCursor(xPos, yPos);
-    display.println("YOU LOST!");
-
-    display.setTextSize(1);
-    display.getTextBounds("wrong combination", 0, 0, &x1, &y1, &width, &height);
-    xPos = (SCREEN_WIDTH - width) / 2;
-    yPos = 40; 
-    display.setCursor(xPos, yPos);
-    display.println("wrong combination");
-
-    display.display(); 
-
-    delay(1500); 
-
-    // Vertical lines clearing from bottom to top
-    for (int y = SCREEN_HEIGHT - 1; y >= 0; y--) {
-        display.drawLine(0, y, SCREEN_WIDTH, y, SSD1306_BLACK); // Draw horizontal line from left to right
-        display.display();
-        delay(10); // Adjust delay to control the speed of the clearing animation
-    }
-
-    delay(1000); // Hold the final cleared screen for 1 second
-    display.clearDisplay(); // Clear the display at the end to ensure it's completely empty
-    display.display();
-
-}
-
-void startCountdown() {
-    for (int i = 3; i > 0; i--) {
-        display.clearDisplay();
-        display.setTextSize(4);
-        display.setTextColor(SSD1306_WHITE);
-        display.setCursor(SCREEN_WIDTH/2 - 12, SCREEN_HEIGHT/2 - 16);
-        display.println(i);
-        display.display();
-        delay(1000);
-    }
-    
-    display.clearDisplay();
-    display.setTextSize(2);
-    display.setCursor(SCREEN_WIDTH/2 - 24, SCREEN_HEIGHT/2 - 8);
-    display.println("GO!");
-    display.display();
-    delay(1000);
-}
-
-void displayPlayerInfo(const String& playerName, int points, int round) {
-
-  Serial.println("Displaying player info:");
-  Serial.println("Player: " + playerName);
-  Serial.println("Points: " + String(points));
-  Serial.println("Round: " + String(round));
-    display.clearDisplay();
-
-    // Display Player Name
-    display.setTextSize(1);
-    display.setCursor(0, 0);
-    display.println("Player: ");
-    if(playerName.length() > 10){
-        display.setTextSize(1);
-    } else{
-        display.setTextSize(2);
-    }
-    display.setCursor(0, 10);
-    display.println(playerName);
-
-    // Display Points
-    display.setTextSize(1);
-    display.setCursor(10, 40);
-    display.println("Points: ");
-    display.setTextSize(2);
-    display.setCursor(10, 50);
-    display.println(points);
-
-    // Display Round
-    display.setTextSize(1);
-    display.setCursor(SCREEN_WIDTH / 2 +20, 40);
-    display.println("Round: ");
-    display.setTextSize(2);
-    display.setCursor(SCREEN_WIDTH / 2 +20, 50);
-    display.println(round);
-
-    display.display(); 
-
-}
-
-void displayGameOverMessage(int round) {
-    display.clearDisplay();
-    display.setTextSize(2);
-    display.setTextColor(SSD1306_WHITE);
-
-    // Display "Game Over!"
-    int16_t x1, y1;
-    uint16_t width, height;
-    display.getTextBounds("Game Over!", 0, 0, &x1, &y1, &width, &height);
-    int16_t xPos = (SCREEN_WIDTH - width) / 2;
-    display.setCursor(xPos, 10);
-    display.println("Game Over!");
-
-    // Display the final round
-    display.setTextSize(1);
-    String roundText = "Final Round: " + String(round);
-    display.getTextBounds(roundText, 0, 0, &x1, &y1, &width, &height);
-    xPos = (SCREEN_WIDTH - width) / 2;
-    display.setCursor(xPos, 40);
-    display.println(roundText);
-
-    display.display();
-    delay(5000); // Display for 5 seconds
-}
-
-
-
 void onSequenceReceived(int sequenceLength) {
   inputWindowDuration = (baseInputDuration + (sequenceLength * additionalTimePerColor))/2;
   inputWindowStart = millis();
@@ -305,6 +231,17 @@ void onSequenceReceived(int sequenceLength) {
   Serial.print(inputWindowDuration);
   Serial.println(" milliseconds");
 
+}
+
+void requestNextSequence() {
+  String topic = "controller/request_sequence";
+  String message = controllerId;
+  
+  if (client.publish(topic.c_str(), message.c_str())) {
+    Serial.println("Next sequence requested");
+  } else {
+    Serial.println("Failed to request next sequence");
+  }
 }
 
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
@@ -369,7 +306,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
 
     // Handle the OLED display update
-    if (String(topic) == "oled/display/controller_2") {
+    if (String(topic) == "oled/display/" + controllerId) {
       Serial.println("Displaying on OLED");
       DynamicJsonDocument doc(512);
       DeserializationError error = deserializeJson(doc, message);
@@ -394,11 +331,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
             displayGameOverMessage(finalRound);
       } else {
           displayPlayerInfo(username, points, round);
+          requestNextSequence();
       }
 
     }
 
-    if (String(topic) == "controller/action/controller_2") {
+     if (String(topic) == "controller/action/" + controllerId) {
         DynamicJsonDocument doc(256);
         DeserializationError error = deserializeJson(doc, message);
         
@@ -408,85 +346,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
                 startCountdown();
             }
         }
-    }
+    }     
 
-}
-
-void controller(){
-    // Check if the controller ID has already been published
-    if (!controllerIdPublished)
-  {
-    Serial.println("Publishing Controller ID");
-
-    // Define the controller ID
-    String controllerId = "controller_2"; // Change to a unique ID for each controller
-
-    // Publish the controller ID to the MQTT server
-    if (client.publish("controller/connect", controllerId.c_str()))
-    {
-      Serial.println("Controller ID published successfully.");
-      controllerIdPublished = true; // Set the flag to true after publishing
-    }
-    else
-    {
-      Serial.println("Failed to publish Controller ID.");
-    }
-  }
-
-}
-
-void rfid(){
-    // Look for new cards
-  if (!mfrc522.PICC_IsNewCardPresent()) {
-    return;
-  }
-
-  // Select one of the cards
-  if (!mfrc522.PICC_ReadCardSerial()) {
-    return;
-  }
-
-
-  // Dump UID of the card
-  String rfidTag = "";
-  for (byte i = 0; i < mfrc522.uid.size; i++) {
-    rfidTag += String(mfrc522.uid.uidByte[i] < 0x10 ? "0" : "");
-    rfidTag += String(mfrc522.uid.uidByte[i], HEX);
-  }
-  rfidTag.toUpperCase();
-
-  Serial.println(rfidTag);
-
-  // Print Card type
-  MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
-  Serial.print("PICC Type: ");
-  Serial.println(mfrc522.PICC_GetTypeName(piccType));
-
-  // Halt PICC
-  mfrc522.PICC_HaltA();
-
-  // Stop encryption on PCD
-  mfrc522.PCD_StopCrypto1();  
-
-   // Log and publish the RFID tag
-  Serial.print("RFID Tag Detected: ");
-  String payload = "{\"controllerId\":\"controller_2\", \"rfidTag\":\"" + rfidTag + "\", \"username\":\"Elyon's RFID\"}";
-   // Publish the RFID tag
-  if (client.publish("controller/rfid", payload.c_str())) {
-    Serial.println("RFID tag published successfully.");
-  } else {
-    Serial.println("Failed to publish RFID tag.");
-  }
-
-
-}
-
-void requestNextSequence() {
-    if (client.publish("controller/request_sequence", "controller_2")) {
-        Serial.println("Next sequence requested");
-    } else {
-        Serial.println("Failed to request next sequence");
-    }
 }
 
 void game() {
@@ -535,7 +396,7 @@ void game() {
         }
     } else {
         if (sequenceEntered) {
-            String sequencePayload = "{\"controllerId\":\"controller_2\", \"sequence\":[";
+            String sequencePayload = "{\"controllerId\":\""+ controllerId +"\", \"sequence\":[";
 
             for (int i = 0; i < sequenceIndex; i++) {
                 sequencePayload += "\"" + String(getColorName(sequenceColor[i])) + "\"";
@@ -553,13 +414,13 @@ void game() {
             }
 
             sequenceIndex = 0;
-            requestNextSequence();
+            //requestNextSequence();
         }else {
             // No sequence entered within the time limit
             hasLost = true;
             displayLossMessage();
             // Optionally, inform the server about the loss
-            String lossPayload = "{\"controllerId\":\"controller_2\", \"status\":\"lost\"}";
+            String lossPayload = "{\"controllerId\":\""+controllerId+"\", \"status\":\"lost\"}";
             if (client.publish("controller/status", lossPayload.c_str())) {
                 Serial.println("Loss status published");
             } else {
@@ -568,11 +429,10 @@ void game() {
         }
 
         inputWindowStart = 0;
+
     }
+    
 }
-
-
-
 
 void setup()
 {
@@ -582,36 +442,15 @@ void setup()
    client.setCallback(mqttCallback);
 
   SPI.begin();           // Init SPI bus  
-  delay(4);
-  mfrc522.PCD_Init();      // Init MFRC522
-  delay(4);
-  mfrc522.PCD_DumpVersionToSerial();       
-  Serial.println("Scan an RFID card or tag.");
-
-  // Start the I2C communication
-  Wire.begin(21, 22);
-
-  // Initialize the display
-  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDRESS)) { // Initialize with VCC switch
-    Serial.println(F("SSD1306 allocation failed"));
-    for (;;); // Don't proceed, loop forever
-  }
-
-  display.display();
-    delay(2000); // Pause for 2 seconds
-
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
-    display.println(F("OLED display ready!"));
-    display.display();
-    delay(1000);
+  setup_rfid(); // Initialize RFID reader
+  
+  Wire.begin(21, 22); // Start the I2C communication
 
     strip.begin();
-    strip.show();  // Initialize all pixels to 'off'
-    strip.setBrightness(50);
+    strip.setBrightness(50); // Set initial brightness
+    strip.show(); // Initialize all pixels to 'off'
 
+    initializeDisplay();
 
   for (byte i = 0; i < 4; i++) {
     pinMode(ledPins[i], OUTPUT);
@@ -627,17 +466,15 @@ void setup()
 
 void loop()
 {
+
   if (!client.connected())
   {
     reconnect();
   }
    client.loop();
-   
-  //Serial.println("Acessed Controller");
-  controller();
 
-  //Serial.println("Acessed RFID");
-  rfid();
+  // Call the RFID logic from the new RFID module
+   rfid_check();
 
     if (gameStarted) {
         game();

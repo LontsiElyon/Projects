@@ -462,28 +462,24 @@ public class ObjectRepository {
     }
 
     public void getRoundWinner(Handler<AsyncResult<JsonObject>> resultHandler) {
-        String query = "SELECT username, points FROM DisplayInfo WHERE round = (SELECT MAX(round) FROM DisplayInfo) ORDER BY points DESC LIMIT 1";
-        
-        // Use the jdbcPool to execute the query correctly
+        String query = "SELECT round, username FROM DisplayInfo WHERE round = (SELECT MAX(round) FROM DisplayInfo) ORDER BY points DESC LIMIT 1";
         jdbcPool.preparedQuery(query).execute(ar -> {
-            if (ar.succeeded()) {
-                RowSet<Row> rows = ar.result();
-                if (rows.size() > 0) {
-                    // Extract the first row to get the winner details
-                    Row row = rows.iterator().next();
-                    JsonObject winner = new JsonObject()
-                        .put("name", row.getString("username"))
-                        .put("score", row.getInteger("points"));
-                    // Return the winner details as the result
-                    resultHandler.handle(Future.succeededFuture(winner));
-                } else {
-                    // No rows found, indicating no winner for the current round
-                    resultHandler.handle(Future.succeededFuture(new JsonObject().put("message", "No winner for this round yet.")));
-                }
+          if (ar.succeeded()) {
+            RowSet<Row> rows = ar.result();
+            if (rows.size() > 0) {
+              Row row = rows.iterator().next();
+              JsonObject winner = new JsonObject()
+                                  .put("round", row.getInteger("round"))
+                                  .put("name", row.getString("username"));
+              resultHandler.handle(Future.succeededFuture(winner));
             } else {
-                // Query execution failed, return the cause of the failure
-                resultHandler.handle(Future.failedFuture(ar.cause()));
+              logger.warn("No winner found for the current round.");
+              resultHandler.handle(Future.succeededFuture(new JsonObject().put("message", "No winner for this round yet.")));
             }
+          } else {
+            logger.error("Failed to execute query to fetch round winner: {}", ar.cause().getMessage());
+            resultHandler.handle(Future.failedFuture(ar.cause()));
+          }
         });
     }
 
