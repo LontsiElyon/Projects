@@ -11,7 +11,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -20,13 +22,28 @@ import org.slf4j.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+/**
+ * @class ObjectController
+ * @brief Handles object-related operations and MQTT communications
+ *
+ * This class manages object operations, MQTT message handling, and game logic
+ * for a multiplayer game system.
+ */
 public class ObjectController {
 
     private static final Logger logger = LoggerFactory.getLogger(ObjectController.class);
     private final ObjectService objectService;
     private final MqttClient mqttClient;
     private Vertx vertx;
-
+    private Map<String, Long> lastHeartbeat = new HashMap<>();
+    private static final long HEARTBEAT_TIMEOUT = 30000; // 30 seconds
+    
+    /**
+     * @brief Constructor for ObjectController
+     * @param router The Vert.x router for HTTP endpoints
+     * @param objectService The service handling object-related operations
+     * @param mqttClient The MQTT client for pub/sub communications
+     */
     public ObjectController(Router router, ObjectService objectService, MqttClient mqttClient) {
         this.objectService = objectService;
         this.mqttClient = mqttClient;
@@ -41,7 +58,9 @@ public class ObjectController {
     }
 
 
-
+    /**
+     * @brief Sets up MQTT handlers for various topics
+     */
     public void setupMqttHandlers() {
 
         logger.debug("Setting up MQTT Handlers");
@@ -51,16 +70,19 @@ public class ObjectController {
             if ("controller/connect".equals(message.topicName())) {
                 handleControllerConnect(message.payload());
             }
-            //logger.debug("Received Message 2: {}", message);
             else if("controller/rfid".equals(message.topicName())){
                handleRfidScan(message.payload());
             }else if("controller/color_sequence".equals(message.topicName())){
                 handleColorSequence(message.payload());
             }else if ("controller/request_sequence".equals(message.topicName())) {
                 handleSequenceRequest(message.payload());
-            }else if("controller/status".equals(message.topicName())){
+            }else if("controller/playerstatus".equals(message.topicName())){
                 handlePlayerStatus(message.payload());
-            }
+            }else if("controller/status".equals(message.topicName())){
+                handleControllerStatus(message.payload());
+            }else if("controller/heartbeat".equals(message.topicName())){
+                handleControllerHeartbeat(message.payload());
+            }   
         });
         mqttClient.subscribe("controller/connect", MqttQoS.EXACTLY_ONCE.value())
         .onSuccess(packetId -> {
@@ -85,31 +107,39 @@ public class ObjectController {
         });
         mqttClient.subscribe("controller/request_sequence", MqttQoS.AT_LEAST_ONCE.value())
             .onSuccess(packetId -> {
-                logger.info("Subscribed to controller/request_sequence topic successfully");
+                logger.info("Subscribed to controller/request_sequence topic successfully with packet id {}", packetId);
             })
             .onFailure(cause -> {
                 logger.error("Failed to subscribe to controller/request_sequence topic: {}", cause.getMessage());
         });
+        mqttClient.subscribe("controller/playerstatus", MqttQoS.AT_LEAST_ONCE.value())
+            .onSuccess(packetId -> {
+                logger.info("Subscribed to controller/playerstatus topic successfully with packet id {}", packetId);
+            })
+            .onFailure(cause -> {
+                logger.error("Failed to subscribe to controller/playerstatus topic: {}", cause.getMessage());
+        });
         mqttClient.subscribe("controller/status", MqttQoS.AT_LEAST_ONCE.value())
             .onSuccess(packetId -> {
-                logger.info("Subscribed to controller/status topic successfully");
+                logger.info("Subscribed to controller/status topic successfully with packet id {}", packetId);
             })
             .onFailure(cause -> {
                 logger.error("Failed to subscribe to controller/status topic: {}", cause.getMessage());
         });
+        mqttClient.subscribe("controller/heartbeat", MqttQoS.AT_LEAST_ONCE.value())
+            .onSuccess(packetId -> {
+                logger.info("Subscribed to controller/heartbeat topic successfully with packet id {}", packetId);
+            })
+            .onFailure(cause -> {
+                logger.error("Failed to subscribe to controller/heartbeat topic: {}", cause.getMessage());
+        });
     }  
-
-    private void publishToFrontend(String message) {
-        JsonObject frontendMessage = new JsonObject()
-            .put("message", message);
-
-        mqttClient.publish("frontend/messages", 
-            Buffer.buffer(frontendMessage.encode()),
-            MqttQoS.AT_LEAST_ONCE, 
-            false, 
-            false);
-    }
+   
     
+    /**
+     * @brief Handles incoming connection messages from controllers
+     * @param payload The payload containing the controller ID
+     */
     // Handle incoming connection messages from controllers
     private void handleControllerConnect(Buffer payload) {
         String controllerId = payload.toString();
@@ -120,6 +150,7 @@ public class ObjectController {
             if (res.succeeded()) {
                 logger.info("Controller registered: {}", controllerId);
                 connectedControllers.add(controllerId);
+                lastHeartbeat.put(controllerId, System.currentTimeMillis());
                 // Optionally publish an acknowledgment back to the controller
                 mqttClient.publish("controller/ack", Buffer.buffer("Connected: " + controllerId), MqttQoS.AT_LEAST_ONCE, false, false);
             } else {
@@ -128,6 +159,42 @@ public class ObjectController {
         });
     }
 
+    private void handleControllerHeartbeat(Buffer payload) {
+        JsonObject heartbeatJson = payload.toJsonObject();
+        String controllerId = heartbeatJson.getString("controllerId");
+        if (controllerId != null) {
+            lastHeartbeat.put(controllerId, System.currentTimeMillis());
+            logger.debug("Received heartbeat from controller: {}", controllerId);
+        }
+    }
+
+    private void handleControllerStatus(Buffer payload) {
+        JsonObject statusJson = payload.toJsonObject();
+        String controllerId = statusJson.getString("controllerId");
+        String status = statusJson.getString("status");
+
+        if (controllerId != null && status != null) {
+            if ("reconnected".equals(status)) {
+                logger.info("Controller reconnected: {}", controllerId);
+                connectedControllers.add(controllerId);
+                lastHeartbeat.put(controllerId, System.currentTimeMillis());
+            } else if ("disconnected".equals(status)) {
+                logger.info("Controller disconnected: {}", controllerId);
+                connectedControllers.remove(controllerId);
+                lastHeartbeat.remove(controllerId);
+            }
+        }
+    }
+
+    private boolean isControllerActive(String controllerId) {
+        Long lastBeat = lastHeartbeat.get(controllerId);
+        return lastBeat != null && (System.currentTimeMillis() - lastBeat) < HEARTBEAT_TIMEOUT;
+    }
+
+     /**
+     * @brief Handles fetching available controllers
+     * @param ctx The routing context for the HTTP request
+     */
     private void handleFetchControllers(RoutingContext ctx) {
         // Call the service to get the available controllers
         objectService.getAvailableControllers(ar -> {
@@ -144,6 +211,11 @@ public class ObjectController {
             }
         });
     }
+
+    /**
+     * @brief Handles player login requests
+     * @param ctx The routing context for the HTTP request
+     */
     private void handleLogin(RoutingContext ctx) {
         // Extract username and controllerId from the HTTP request parameters
         String username = ctx.request().getParam("username");
@@ -164,7 +236,6 @@ public class ObjectController {
                 // On success, send a 200 OK response with a success message
                 ctx.response().setStatusCode(200).end("Player registered and session created successfully");
                 logger.info("Player {} logged in with controller {}", username, controllerId);
-                publishToFrontend("Player " + username + " logged in with controller " + controllerId);
             } else {
                 // On failure, send a 500 Internal Server Error response with an error message
                 ctx.response().setStatusCode(500).end("Failed to register player or create session");
@@ -172,7 +243,11 @@ public class ObjectController {
             }
         });
     }
-
+        
+        /**
+     * @brief Handles RFID scan messages
+     * @param payload The payload containing RFID scan data
+     */
         // Handle incoming RFID scan messages
     private void handleRfidScan(Buffer payload) {
         // Convert the payload to a string to get the RFID tag
@@ -214,7 +289,11 @@ public class ObjectController {
     private AtomicInteger roundsPlayed = new AtomicInteger(0);
     private List<String> connectedControllers = new ArrayList<>();
     private List<String> controllersWaitingForSequence = new ArrayList<>();
-
+    
+    /**
+     * @brief Handles sequence generation requests
+     * @param routingContext The routing context for the HTTP request
+     */
     private void handleGenerateSequence(RoutingContext routingContext) {
         // Retrieve the list of connected controllers
         objectService.getConnectedControllers(connectedControllersResult -> {
@@ -255,7 +334,10 @@ public class ObjectController {
     }
 
 
-
+    /**
+     * @brief Handles sequence requests from controllers
+     * @param payload The payload containing the controller ID
+     */
     private void handleSequenceRequest(Buffer payload) {
     String controllerId = payload.toString();
     logger.debug("Received sequence request from controller: {}", controllerId);
@@ -269,35 +351,48 @@ public class ObjectController {
             sendNextSequence(Arrays.asList(controllerId));
         }
     }
-
+    
+    /**
+     * @brief Sends the next color sequence to specified controllers
+     * @param controllers List of controller IDs to receive the sequence
+     * @return A Future indicating the completion of the operation
+     */
     private Future<Void> sendNextSequence(List<String> controllers) {
         List<Future<Void>> futures = new ArrayList<>();
         currentColorSequence = objectService.generateColorSequence();
         String message = currentColorSequence.encode();
         String topic = "neopixel/display";
-    
+
         for (String controllerId : controllers) {
-            Promise<Void> promise = Promise.promise();
-            mqttClient.publish(topic,
-                Buffer.buffer(message),
-                MqttQoS.AT_LEAST_ONCE,
-                false,
-                false,
-                ar -> {
-                    if (ar.succeeded()) {
-                        logger.info("Color sequence sent to controller {}: {}", controllerId, message);
-                        promise.complete();
-                    } else {
-                        logger.error("Failed to send color sequence to controller {}", controllerId, ar.cause());
-                        promise.fail(ar.cause());
-                    }
-                });
-            futures.add(promise.future());
+            if (isControllerActive(controllerId)) {
+                Promise<Void> promise = Promise.promise();
+                mqttClient.publish(topic,
+                    Buffer.buffer(message),
+                    MqttQoS.AT_LEAST_ONCE,
+                    false,
+                    false,
+                    ar -> {
+                        if (ar.succeeded()) {
+                            logger.info("Color sequence sent to controller {}: {}", controllerId, message);
+                            promise.complete();
+                        } else {
+                            logger.error("Failed to send color sequence to controller {}", controllerId, ar.cause());
+                            promise.fail(ar.cause());
+                        }
+                    });
+                futures.add(promise.future());
+            } else {
+                logger.warn("Controller {} is not active, skipping sequence send", controllerId);
+            }
         }
-    
+
         return Future.all(futures).mapEmpty();
     }
-
+    
+    /**
+     * @brief Notifies a controller of their loss
+     * @param controllerId The ID of the controller to notify
+     */
     private void notifyControllerOfLoss(String controllerId) {
         JsonObject lossMessage = new JsonObject()
             .put("username", "Game Over")
@@ -320,7 +415,12 @@ public class ObjectController {
                 }
             });
     }
-
+    
+    /**
+     * @brief Handles color sequence submissions from controllers
+     * @param payload The payload containing the submitted sequence
+     * @return A Future indicating whether the sequence matched
+     */
     public Future<Boolean> handleColorSequence(Buffer payload) {
         Promise<Boolean> promise = Promise.promise();
 
@@ -359,7 +459,11 @@ public class ObjectController {
 
         return promise.future();
     }
-
+     
+    /**
+     * @brief Handles player loss events
+     * @param controllerId The ID of the controller that lost
+     */
     private void handlePlayerLoss(String controllerId) {
         int remainingPlayers = activePlayers.decrementAndGet();
         logger.info("Player lost: {}. Remaining players: {}", controllerId, remainingPlayers);
@@ -373,7 +477,11 @@ public class ObjectController {
             logger.info("Waiting for other players to complete their turns.");
         }
     } 
-
+    
+    /**
+     * @brief Handles player status updates
+     * @param payload The payload containing the player status
+     */
     private void handlePlayerStatus(Buffer payload) {
         JsonObject payloadJson = payload.toJsonObject();
         String controllerId = payloadJson.getString("controllerId");
@@ -390,7 +498,11 @@ public class ObjectController {
             logger.warn("Unrecognized status '{}' for controller {}", status, controllerId);
         }
     }
-
+    
+    /**
+     * @brief Handles fetching the winner of a round
+     * @param ctx The routing context for the HTTP request
+     */
     // New method to handle fetching round winner
     private void handleFetchRoundWinner(RoutingContext ctx) {
         objectService.getRoundWinner(ar -> {
@@ -421,6 +533,9 @@ public class ObjectController {
         });
     }
 
+    /**
+     * @brief Starts a new round of the game
+     */
     private void startNewRound() {
     
         logger.info("All players have lost. Starting a new round.");
@@ -472,7 +587,12 @@ public class ObjectController {
             }
         });
     }
-
+    
+    /**
+     * @brief Sends a countdown signal to all connected controllers
+     * @param controllers List of controller IDs to receive the countdown
+     * @return A Future indicating the completion of the operation
+     */
     private Future<Void> sendCountdownToAllControllers(List<String> controllers) {
         List<Future<Void>> futures = new ArrayList<>();
         for (String controllerId : controllers) {
@@ -503,7 +623,10 @@ public class ObjectController {
         return promise.future();
     }
 
-
+     /**
+     * @brief Sends display information to a specific controller
+     * @param controllerId The ID of the controller to receive the information
+     */
     public void sendDisplayInfoToController(String controllerId) {
         // First, fetch the current round
         objectService.fetchCurrentRound(controllerId)
@@ -536,7 +659,9 @@ public class ObjectController {
     }
 
     
-
+    /**
+     * @brief Stops the game and performs end-game operations
+     */
     private void stopGame() {
         logger.info("Game has reached 5 rounds. Stopping the game.");
         
@@ -563,7 +688,11 @@ public class ObjectController {
             }
         });
     }
-
+    
+    /**
+     * @brief Notifies a specific controller that the game has ended
+     * @param controllerId The ID of the controller to notify
+     */
     // Method to notify a specific controller that the game has ended
     private void notifyControllerOfGameEnd(String controllerId) {
         JsonObject endGameMessage = new JsonObject()

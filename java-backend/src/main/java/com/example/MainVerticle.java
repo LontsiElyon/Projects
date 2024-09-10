@@ -1,3 +1,16 @@
+/**
+ * @file MainVerticle.java
+ * @brief Verticle for setting up MQTT client, JDBC client, and HTTP server in a Vert.x application.
+ *
+ * This class configures and starts the necessary components for the application:
+ * - MQTT client for messaging
+ * - JDBC client for database operations
+ * - HTTP server with routing and CORS support
+ * 
+ * It also handles the deployment of the Vert.x application.
+ * 
+ * @date 2024
+ */
 package com.example;
 
 import java.util.HashSet;
@@ -23,12 +36,23 @@ import io.vertx.mqtt.MqttClientOptions;
 import io.vertx.sqlclient.PoolOptions;
 
 
-
+/**
+ * @class MainVerticle
+ * @brief Verticle for initializing and managing MQTT, JDBC, and HTTP server.
+ * 
+ * This verticle handles the setup of MQTT and JDBC clients, HTTP routing, and server creation.
+ */
 public class MainVerticle extends AbstractVerticle {
 
     private static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
 
     ObjectController objectController;
+
+    /**
+     * @brief Starts the verticle by initializing MQTT client, JDBC client, and HTTP server.
+     * 
+     * @param startPromise Promise used to signal completion of the startup process.
+     */
     @Override
     public void start(Promise<Void> startPromise) {
         // Retrieve environment variables
@@ -74,7 +98,14 @@ public class MainVerticle extends AbstractVerticle {
                     }
                 });
     }
-
+    
+    /**
+     * @brief Configures and creates an MQTT client.
+     * 
+     * @param username MQTT username.
+     * @param password MQTT password.
+     * @return Configured MqttClient instance.
+     */
     private MqttClient setupMqttClient(String username, String password) {
         // MQTT client configuration options
         MqttClientOptions options = new MqttClientOptions()
@@ -100,7 +131,17 @@ public class MainVerticle extends AbstractVerticle {
         return mqttClient;
     }
 
-   
+    
+    /**
+     * @brief Configures and creates a JDBC client pool.
+     * 
+     * @param host Database host.
+     * @param port Database port.
+     * @param dbName Database name.
+     * @param user Database user.
+     * @param password Database password.
+     * @return Configured JDBCPool instance.
+     */
     private JDBCPool setupJdbcClient(String host, int port, String dbName, String user, String password) {
         // JDBC client pool configuration options
         return JDBCPool.pool(vertx,
@@ -111,7 +152,14 @@ public class MainVerticle extends AbstractVerticle {
                 new PoolOptions().setMaxSize(5)
         );
     }
-
+    
+    /**
+     * @brief Sets up the HTTP server router with CORS support and routes.
+     * 
+     * @param mqttClient MQTT client instance.
+     * @param jdbcPool JDBC client pool instance.
+     * @return Configured Router instance.
+     */
     private Router setupRouter(MqttClient mqttClient, JDBCPool jdbcPool) {
         Router router = Router.router(vertx);
         router.route().handler(BodyHandler.create());

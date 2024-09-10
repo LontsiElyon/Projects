@@ -1,3 +1,16 @@
+/**
+ * @file main.cpp
+ * @brief Game controller using Wi-Fi, MQTT, NeoPixel LEDs, and an RFID module.
+ *
+ * This program connects to an MQTT server, communicates with various hardware
+ * components like NeoPixels and an RFID reader, and handles game logic where
+ * players input sequences of button presses.
+ * 
+ * The program also interfaces with OLED displays, updates via MQTT, and handles game sequences.
+ * 
+ * @date 2024
+ */
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
@@ -34,7 +47,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 #define NEOPIXEL_PIN 15
-#define NUMPIXELS 2 
+#define NUMPIXELS 4 
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_RGB + NEO_KHZ800);
 
@@ -81,6 +94,10 @@ unsigned long inputWindowStart = 0;
 unsigned long inputWindowDuration ; // 5 seconds input window
 const unsigned long baseInputDuration = 10000;
 const unsigned long additionalTimePerColor = 2000;
+unsigned long lastReconnectAttempt = 0;
+const unsigned long reconnectInterval = 5000; // Try to reconnect every 5 seconds
+unsigned long lastHeartbeat = 0;
+const unsigned long heartbeatInterval = 10000; // Send heartbeat every 10 seconds
 bool readyForNextSequence = true;
 bool hasLost = false;
 bool sequenceEntered = false;
@@ -98,6 +115,11 @@ bool willRetain = true;
 uint32_t sequenceColor[100];  // Assuming a maximum of 20 colors in the sequence
 int sequenceIndex = 0;
 
+/**
+ * @brief Shows a single color on the NeoPixel strip.
+ * 
+ * @param color The color to display.
+ */
 // Function to show a single color
 void showColor(uint32_t color) {
     for (int i = 0; i < strip.numPixels(); i++) {
@@ -108,6 +130,12 @@ void showColor(uint32_t color) {
     delay(500);  // Wait for half a second
 }
 
+/**
+ * @brief Displays a sequence of colors on the NeoPixel strip.
+ * 
+ * @param sequence The array of colors to display.
+ * @param length The length of the color sequence.
+ */
 // Function to show the sequence of colors
 void showColorSequence(uint32_t* sequence, int length) {
     for (int i = 0; i < length; i++) {
@@ -118,7 +146,9 @@ void showColorSequence(uint32_t* sequence, int length) {
     }
 }
 
-
+/**
+ * @brief Connects the ESP32 to the specified Wi-Fi network.
+ */
 void setup_wifi()
 {
   delay(10);
@@ -140,6 +170,11 @@ void setup_wifi()
   Serial.println(WiFi.localIP());
 }
 
+/**
+ * @brief Initializes and publishes the controller ID to the MQTT server.
+ * 
+ * @return True if the controller ID was successfully published, false otherwise.
+ */
 bool initializeControllerId() {
     if (!controllerIdPublished) {
         Serial.println("Initializing and Publishing Controller ID");
@@ -163,8 +198,10 @@ bool initializeControllerId() {
     }
     return false;
 }
-
-void reconnect()
+/**
+ * @brief Attempts to reconnect to the MQTT server and subscribes to relevant topics.
+ */
+bool reconnect()
 {
   while (!client.connected())
   {
@@ -172,10 +209,9 @@ void reconnect()
     
     if (client.connect("ESP32Client", mqtt_user, mqtt_password, willTopic, willQoS, willRetain, willMessage))
     {
-      Serial.println("connected");
-      //client.subscribe("player/update"); // Subscribe to the player/update topic
-     if(client.subscribe("neopixel/display")) {
-       Serial.println("Subscripted to neopixel successfully");
+        Serial.println("connected");
+        if(client.subscribe("neopixel/display")) {
+        Serial.println("Subscripted to neopixel successfully");
      }
         // Publish Controller ID if not already done
             if (!controllerIdPublished) {
@@ -213,17 +249,28 @@ void reconnect()
              Serial.println("Published online status.");
             }
 
-            
+            // Publish controller reconnection message
+            String reconnectMessage = "{\"controllerId\":\"" + controllerId + "\", \"status\":\"reconnected\"}";
+            client.publish("controller/status", reconnectMessage.c_str());
+
+          return true;  // Successfully connected  
     }
     else{
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
       delay(5000);
+      return false;  // Failed to connect
     }
   }
+  return true;   // Already connected
 }
 
+/**
+ * @brief Handles game start and input windows for color sequences.
+ * 
+ * @param sequenceLength The length of the color sequence received.
+ */
 void onSequenceReceived(int sequenceLength) {
   inputWindowDuration = (baseInputDuration + (sequenceLength * additionalTimePerColor))/2;
   inputWindowStart = millis();
@@ -233,6 +280,9 @@ void onSequenceReceived(int sequenceLength) {
 
 }
 
+/**
+ * @brief Requests the next color sequence for the game.
+ */
 void requestNextSequence() {
   String topic = "controller/request_sequence";
   String message = controllerId;
@@ -244,6 +294,21 @@ void requestNextSequence() {
   }
 }
 
+void sendHeartbeat() {
+  if (client.connected()) {
+    String heartbeatMessage = "{\"controllerId\":\"" + controllerId + "\", \"status\":\"alive\"}";
+    client.publish("controller/heartbeat", heartbeatMessage.c_str());
+    Serial.println("Heartbeat sent");
+  }
+}
+
+/**
+ * @brief Callback function that handles incoming MQTT messages.
+ * 
+ * @param topic The topic of the incoming message.
+ * @param payload The payload of the message.
+ * @param length The length of the payload.
+ */
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
     Serial.print("Message arrived [");
     Serial.print(topic);
@@ -350,6 +415,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
 }
 
+/**
+ * @brief Handles the sequence of button inputs from players.
+ * 
+ * This function checks for button presses, debounces them, and updates the
+ * sequence of colors entered by the player.
+ */
 void game() {
     if (!gameStarted || hasLost) {
         return; // Don't process any inputs if the game hasn't started or if this controller has lost
@@ -421,7 +492,7 @@ void game() {
             displayLossMessage();
             // Optionally, inform the server about the loss
             String lossPayload = "{\"controllerId\":\""+controllerId+"\", \"status\":\"lost\"}";
-            if (client.publish("controller/status", lossPayload.c_str())) {
+            if (client.publish("controller/playerstatus", lossPayload.c_str())) {
                 Serial.println("Loss status published");
             } else {
                 Serial.println("Failed to publish loss status");
@@ -467,11 +538,25 @@ void setup()
 void loop()
 {
 
-  if (!client.connected())
-  {
-    reconnect();
-  }
-   client.loop();
+  unsigned long currentMillis = millis();
+
+  if (!client.connected()) {
+    if (currentMillis - lastReconnectAttempt > reconnectInterval) {
+      lastReconnectAttempt = currentMillis;
+      Serial.println("Attempting to reconnect MQTT...");
+      if (reconnect()) {
+        lastReconnectAttempt = 0;
+      }
+    }
+  } else {
+    client.loop();
+
+    // Send heartbeat
+    if (currentMillis - lastHeartbeat > heartbeatInterval) {
+      lastHeartbeat = currentMillis;
+      sendHeartbeat();
+    }
+  } 
 
   // Call the RFID logic from the new RFID module
    rfid_check();
@@ -481,8 +566,9 @@ void loop()
     }
 
   //delay(1000); // Publish every 2 seconds
-}
 
+
+}
 
 
 
