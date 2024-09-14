@@ -1,3 +1,10 @@
+/**
+ * @file rfid.cpp
+ * @brief RFID handling for the Simon Game application
+ * @details This file contains functions for initializing the RFID reader and checking RFID tags.
+ *          It interacts with the RFID reader to scan cards or tags and publishes the RFID data 
+ *          to an MQTT topic. It also logs RFID information to the serial console.
+ */
 #include "rfid.h"
 #include <MFRC522.h>
 #include <PubSubClient.h>
@@ -46,8 +53,9 @@ void rfid_check() {
   mfrc522.PCD_StopCrypto1();
 
   // Log and publish the RFID tag
+  
   Serial.print("RFID Tag Detected: ");
-  String payload = "{\"controllerId\":\"" + controllerId + "\", \"rfidTag\":\"" + rfidTag + "\", \"username\":\"Lovro's RFID\"}";
+  String payload = "{\"controllerId\":\"" + controllerId + "\", \"rfidTag\":\"" + rfidTag + "\", \"username\":\"Elyon's RFID\"}";
 
   // Publish the RFID tag
   if (client.publish("controller/rfid", payload.c_str())) {

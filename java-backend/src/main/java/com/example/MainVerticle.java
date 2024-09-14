@@ -10,7 +10,18 @@
  * It also handles the deployment of the Vert.x application.
  * 
  * @date 2024
+ 
+
+
+ * @defgroup MainVerticleGroup Main Verticle
+ * @brief Group for MainVerticle class and its related components.
+ * 
+ * This group includes all classes, methods, and components required for setting up 
+ * and running the Vert.x application, including the MQTT client, JDBC client, and HTTP server.
+ * 
+ * @{
  */
+
 package com.example;
 
 import java.util.HashSet;
@@ -41,6 +52,8 @@ import io.vertx.sqlclient.PoolOptions;
  * @brief Verticle for initializing and managing MQTT, JDBC, and HTTP server.
  * 
  * This verticle handles the setup of MQTT and JDBC clients, HTTP routing, and server creation.
+ * 
+ * @ingroup MainVerticleGroup
  */
 public class MainVerticle extends AbstractVerticle {
 
@@ -52,6 +65,7 @@ public class MainVerticle extends AbstractVerticle {
      * @brief Starts the verticle by initializing MQTT client, JDBC client, and HTTP server.
      * 
      * @param startPromise Promise used to signal completion of the startup process.
+     * @ingroup MainVerticleGroup
      */
     @Override
     public void start(Promise<Void> startPromise) {
@@ -105,6 +119,7 @@ public class MainVerticle extends AbstractVerticle {
      * @param username MQTT username.
      * @param password MQTT password.
      * @return Configured MqttClient instance.
+     * @ingroup MainVerticleGroup
      */
     private MqttClient setupMqttClient(String username, String password) {
         // MQTT client configuration options
@@ -141,6 +156,7 @@ public class MainVerticle extends AbstractVerticle {
      * @param user Database user.
      * @param password Database password.
      * @return Configured JDBCPool instance.
+     * @ingroup MainVerticleGroup
      */
     private JDBCPool setupJdbcClient(String host, int port, String dbName, String user, String password) {
         // JDBC client pool configuration options
@@ -159,6 +175,7 @@ public class MainVerticle extends AbstractVerticle {
      * @param mqttClient MQTT client instance.
      * @param jdbcPool JDBC client pool instance.
      * @return Configured Router instance.
+     * @ingroup MainVerticleGroup
      */
     private Router setupRouter(MqttClient mqttClient, JDBCPool jdbcPool) {
         Router router = Router.router(vertx);
@@ -188,7 +205,12 @@ public class MainVerticle extends AbstractVerticle {
 
         return router;
     }
-
+    
+    /**
+     * @brief Main method for deploying MainVerticle.
+     * 
+     * @ingroup MainVerticleGroup
+     */
     public static void main(String[] args) {
         // Create Vertx instance and deploy MainVerticle
         Vertx vertx = Vertx.vertx();
@@ -201,3 +223,5 @@ public class MainVerticle extends AbstractVerticle {
         });
     }
 }
+
+/** @} */  // End of MainVerticleGroup

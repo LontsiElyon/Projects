@@ -1,3 +1,19 @@
+
+/**
+ * 
+ * @file ObjectService.java
+ * @brief The ObjectService class manages game-related logic, including operations involving players, controllers, sessions, and points.
+ * 
+ * The ObjectService class manages game-related logic, including operations involving players, controllers, sessions, and points.
+ * It interacts with the repository layer to perform CRUD operations, manage game sessions, update player scores, and handle game rounds.
+ * This class includes methods for creating new rounds, updating player points, fetching current rounds, and determining round winners.
+ 
+ * @defgroup ObjectService ObjectService
+ * This module handles the logic related to players, controllers, sessions, and points.
+ * It communicates with the repository layer to perform CRUD operations and manage game sequences.
+ * @{
+ */
+
 package com.example.service;
 
 import java.util.List;
@@ -14,6 +30,11 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * @ingroup ObjectService
+ * The ObjectService class handles core business logic for player registration, controller management,
+ * game sessions, and color sequence generation for a gaming application.
+ */
 public class ObjectService {
 
     private static final Logger logger = LoggerFactory.getLogger(ObjectService.class);
@@ -24,23 +45,45 @@ public class ObjectService {
     private final int minSequenceLength = 1; // Minimum sequence length
     private final int maxSequenceLength = 4; // Maximum sequence length
 
+    /**
+     * Constructor for ObjectService.
+     * @param objectRepository the repository to handle database operations.
+     */
     public ObjectService(ObjectRepository objectRepository) {
         this.objectRepository = objectRepository;
     }
-
+    /**
+     * Registers a controller.
+     * @param controllerId the ID of the controller to register.
+     * @param resultHandler handles the result of the operation.
+     */
     public void registerController(String controllerId, Handler<AsyncResult<Void>> resultHandler) {
         // Delegate the operation to the repository
         objectRepository.insertController(controllerId, resultHandler);
     } 
-
+    
+    /**
+     * Fetches available controllers from the repository.
+     * @param resultHandler handles the result containing a JSON array of controllers.
+     */
     public void getAvailableControllers(Handler<AsyncResult<JsonArray>> resultHandler) {
         // Delegate the operation to the repository
         objectRepository.fetchControllers(resultHandler);
     }
+    /**
+     * Fetches connected controllers.
+     * @param resultHandler handles the result containing a list of connected controllers.
+     */
     public void getConnectedControllers(Handler<AsyncResult<List<String>>> resultHandler) {
         objectRepository.getConnectedControllers(resultHandler);
     }
-
+    
+    /**
+     * Registers a player and creates a session for them.
+     * @param username the username of the player.
+     * @param controllerId the controller ID associated with the player.
+     * @param resultHandler handles the result of the registration and session creation.
+     */
     public void registerPlayerAndCreateSession(String username, String controllerId, Handler<AsyncResult<Void>> resultHandler) {
          // Check if the controller is already in use
          logger.info("Check if the controller is already in use: {}",controllerId );
@@ -75,7 +118,11 @@ public class ObjectService {
             }
         });
     }
-
+    /**
+     * Registers a player using an RFID tag and creates a session.
+     * @param payload the payload containing player information including RFID tag.
+     * @param resultHandler handles the result of the operation.
+     */
     public void registerPlayerWithRfid(String payload, Handler<AsyncResult<Void>> resultHandler) {
         JsonObject json = new JsonObject(payload);
         String rfidTag = json.getString("rfidTag");
@@ -116,7 +163,12 @@ public class ObjectService {
         });
     }
 
-
+    
+    /**
+     * Checks if a controller is in use.
+     * @param controllerId the ID of the controller to check.
+     * @param resultHandler handles the result of the usage check.
+     */
     private void checkControllerUsage(String controllerId, Handler<AsyncResult<Boolean>> resultHandler) {
         // Check if the controller is in use in the RFIDAssignments table
         objectRepository.isControllerInUse(controllerId, rfidCheckResult -> {
@@ -140,7 +192,13 @@ public class ObjectService {
         });
     }
 
-    
+    /**
+     * Creates a session and assigns an RFID tag to the player.
+     * @param playerId the player's ID.
+     * @param controllerId the controller ID to associate.
+     * @param rfidTag the RFID tag to assign.
+     * @param resultHandler handles the result of session creation.
+     */
     private void createRfidSession(int playerId, String controllerId, String rfidTag, Handler<AsyncResult<Void>> resultHandler) {
         // Create a new session and record RFID assignment
         objectRepository.createSession(playerId, controllerId, "RFID", createSessionResult -> {
@@ -154,7 +212,11 @@ public class ObjectService {
 
 
     private JsonArray storedSequence;
-
+    
+    /**
+     * Generates a random color sequence.
+     * @return the generated color sequence.
+     */
     public JsonArray generateColorSequence() {
         // Generate a random sequence length between min and max
         int sequenceLength = random.nextInt(maxSequenceLength - minSequenceLength + 1) + minSequenceLength;
@@ -169,7 +231,13 @@ public class ObjectService {
         this.storedSequence = colorSequence;
         return colorSequence;
     }
-
+    
+    /**
+     * Compares the received color sequence with the stored sequence and awards points if they match.
+     * @param controllerId the ID of the controller.
+     * @param receivedSequence the received color sequence.
+     * @return a Future indicating success or failure.
+     */
     public Future<Boolean> compareSequenceAndAwardPoints(String controllerId, JsonArray receivedSequence) {
         if (controllerId == null || receivedSequence == null) {
             logger.error("Invalid input: controllerId or receivedSequence is null");
@@ -214,6 +282,12 @@ public class ObjectService {
             });
     }
 
+    /**
+     * Compares two sequences of colors.
+     * @param generated the generated color sequence.
+     * @param received the received color sequence.
+     * @return true if the sequences match, false otherwise.
+     */
     private boolean compareSequences(JsonArray generated, JsonArray received) {
         if (generated == null || received == null) {
             logger.error("Either generated or received sequence is null");
@@ -237,24 +311,50 @@ public class ObjectService {
     
         return true;
     }
-
+    
+    /**
+     * Fetches display information for a controller and round.
+     * @param controllerId the ID of the controller.
+     * @param currentRound the current round.
+     * @return a Future containing display information.
+     */
     public Future<JsonObject> fetchDisplayInfo(String controllerId,int currentRound) {
         return objectRepository.fetchDisplayInfo(controllerId,currentRound);
     }
-
+    
+    /**
+     * Creates a new round for a controller.
+     * @param controllerId the ID of the controller.
+     * @return a Future indicating success or failure.
+     */
     public Future<Void> createNewRound(String controllerId) {
         return objectRepository.createNewRound(controllerId);
     }
-
+    
+    /**
+     * Fetches the current round for a controller.
+     * @param controllerId the ID of the controller.
+     * @return a Future containing the current round number.
+     */
     public Future<Integer> fetchCurrentRound(String controllerId) {
         return objectRepository.fetchCurrentRound(controllerId);
     }
-
+    
+    /**
+     * Retrieves the winner of the current round.
+     * @param resultHandler handles the result containing the round winner information.
+     */
     public void getRoundWinner(Handler<AsyncResult<JsonObject>> resultHandler) {
         // Delegate the operation to the repository
         objectRepository.getRoundWinner(resultHandler);
     }
+    
 
+    /**
+     * Updates the high score for a player based on their controller ID.
+     * @param controllerId the controller ID.
+     * @return a Future indicating success or failure.
+     */
     public Future<Void> updatePlayerHighScore(String controllerId) {
         return objectRepository.fetchPlayerIdByControllerId(controllerId)
             .compose(playerId -> {
@@ -269,3 +369,4 @@ public class ObjectService {
     
 }
 
+/** @} */

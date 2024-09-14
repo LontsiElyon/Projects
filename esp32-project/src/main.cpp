@@ -11,6 +11,10 @@
  * @date 2024
  */
 
+/**
+ * @defgroup config Configuration and Initialization
+ * @brief Initialization and configuration related functions.
+ */
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
@@ -22,35 +26,64 @@
 #include <Adafruit_NeoPixel.h>
 #include "display.h"
 #include "rfid.h"
-
+/**
+ * @brief Wi-Fi credentials and MQTT server settings.
+ * 
+ * @defgroup settings Settings
+ * @{
+ */
 // WiFi settings
-const char *ssid = "Apartment Y119" ;    // TODO: Change to your WiFi SSID   ""  "SmartFactoryLab"  Apartment Y119
-const char *password = "99704532092388225373"; // TODO: Change to your WiFi Passwordt  "99704532092388225373"  "smartfactorylab"
+const char *ssid = "SmartFactoryLab" ;    // TODO: Change to your WiFi SSID   ""  "SmartFactoryLab"  Apartment Y119  ///< Wi-Fi SSID
+const char *password = "smartfactorylab"; // TODO: Change to your WiFi Passwordt  "99704532092388225373"  "smartfactorylab"  ///< Wi-Fi Password
 
 // MQTT settings
-const char *mqtt_server = "192.168.178.43"; // Laptop IP Address  192.168.50.199         192.168.178.43
-const int mqtt_port = 1883;
-const char *mqtt_user = "sose24";
-const char *mqtt_password = "informatik";
+const char *mqtt_server = "192.168.50.199"; // Laptop IP Address  192.168.50.199         192.168.178.43   ///< MQTT server IP address
+const int mqtt_port = 1883;   ///< MQTT server port
+const char *mqtt_user = "sose24";  ///< MQTT username
+const char *mqtt_password = "informatik";   ///< MQTT password
+/** @} */
 
+/**
+ * @defgroup hardware Hardware Components
+ * @brief Initialization and interaction with hardware components like RFID, LEDs, and buttons.
+ */
 
+/**
+ * @brief Initialize the RFID reader and related settings.
+ * 
+ * @defgroup rfid RFID Handling
+ * @{
+ */
 #define SS_PIN 5
 #define RST_PIN 4 
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
+/** @} */
 
-
+/**
+ * @brief Array of LED pins and button pins.
+ * 
+ * @defgroup io IO Configuration
+ * @{
+ */
 const uint8_t ledPins[] = {32, 25, 27, 12};
 const uint8_t buttonPins[] = {33, 26, 14, 13};
+/** @} */
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-#define NEOPIXEL_PIN 15
-#define NUMPIXELS 4 
+/**
+ * @brief Pin definitions and NeoPixel setup.
+ * 
+ * @defgroup neopixel NeoPixel Control
+ * @{
+ */
+#define NEOPIXEL_PIN 15  ///< NeoPixel data pin
+#define NUMPIXELS 4 ///< Number of NeoPixels
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_RGB + NEO_KHZ800);
-
+/** @} */
 
 bool controllerIdPublished = false; // Flag to check if the controller ID has been published
 uint32_t colorSequence[100];
@@ -119,6 +152,8 @@ int sequenceIndex = 0;
  * @brief Shows a single color on the NeoPixel strip.
  * 
  * @param color The color to display.
+ * 
+ * @ingroup neopixel
  */
 // Function to show a single color
 void showColor(uint32_t color) {
@@ -135,6 +170,8 @@ void showColor(uint32_t color) {
  * 
  * @param sequence The array of colors to display.
  * @param length The length of the color sequence.
+ * 
+ * @ingroup neopixel
  */
 // Function to show the sequence of colors
 void showColorSequence(uint32_t* sequence, int length) {
@@ -145,9 +182,15 @@ void showColorSequence(uint32_t* sequence, int length) {
         delay(250);  // Short pause with LEDs off
     }
 }
+/**
+ * @defgroup mqtt MQTT Handling
+ * @brief Functions for connecting to and interacting with the MQTT server.
+ */
 
 /**
  * @brief Connects the ESP32 to the specified Wi-Fi network.
+ * 
+ * @ingroup config
  */
 void setup_wifi()
 {
@@ -174,6 +217,8 @@ void setup_wifi()
  * @brief Initializes and publishes the controller ID to the MQTT server.
  * 
  * @return True if the controller ID was successfully published, false otherwise.
+ * 
+ * @ingroup mqtt
  */
 bool initializeControllerId() {
     if (!controllerIdPublished) {
@@ -198,73 +243,78 @@ bool initializeControllerId() {
     }
     return false;
 }
-/**
- * @brief Attempts to reconnect to the MQTT server and subscribes to relevant topics.
- */
-bool reconnect()
-{
-  while (!client.connected())
-  {
-    Serial.print("Attempting MQTT connection...");
-    
-    if (client.connect("ESP32Client", mqtt_user, mqtt_password, willTopic, willQoS, willRetain, willMessage))
-    {
-        Serial.println("connected");
-        if(client.subscribe("neopixel/display")) {
-        Serial.println("Subscripted to neopixel successfully");
-     }
-        // Publish Controller ID if not already done
+
+bool connectMQTT(){
+   // Publish Controller ID if not already done
             if (!controllerIdPublished) {
                 if (initializeControllerId()) {
                     Serial.println("Controller ID published and ready for subscriptions.");
                 } else {
                     Serial.println("Waiting for Controller ID to be published...");
                 }
+            } 
+
+           // Generate a unique client ID using the controller ID
+    String clientId = "ESP32Client-" + controllerId;
+    
+    Serial.print("Attempting MQTT connection with client ID: ");
+    Serial.println(clientId);
+    
+    if (client.connect(clientId.c_str(), mqtt_user, mqtt_password, willTopic, willQoS, willRetain, willMessage)) {
+        Serial.println("Connected to MQTT broker");
+        
+        // Subscribe to necessary topics
+        String neoTopic = "neopixel/display" + controllerId;
+        if (client.subscribe(neoTopic.c_str())) {
+            Serial.println("Subscribed to neopixel successfully");
+        }
+        
+        
+            String oledTopic = "oled/display/" + controllerId;
+            String actionTopic = "controller/action/" + controllerId;
+            
+            if (client.subscribe(oledTopic.c_str())) {
+                Serial.println("Subscribed to OLED topic: " + oledTopic);
             }
-
-      // Make sure `controllerId` is already initialized
-            if (controllerIdPublished) {
-                // Subscribe to the OLED display topic
-                String oledTopic = "oled/display/" + controllerId;
-                if (client.subscribe(oledTopic.c_str())) {
-                    Serial.println("Subscribed to OLED topic: " + oledTopic);
-                } else {
-                    Serial.println("Failed to subscribe to OLED topic: " + oledTopic);
-                }
-
-                // Subscribe to controller action specific topic
-                String actionTopic = "controller/action/" + controllerId;
-                if (client.subscribe(actionTopic.c_str())) {
-                    Serial.println("Subscribed to action topic: " + actionTopic);
-                } else {
-                    Serial.println("Failed to subscribe to action topic: " + actionTopic);
-                }
-            } else {
-                Serial.println("Controller ID not yet published, cannot subscribe.");
+            
+            if (client.subscribe(actionTopic.c_str())) {
+                Serial.println("Subscribed to action topic: " + actionTopic);
             }
-
-
-            // Publish online status to inform other clients
-           if (client.publish(willTopic, "online", true)) {
-             Serial.println("Published online status.");
-            }
-
-            // Publish controller reconnection message
-            String reconnectMessage = "{\"controllerId\":\"" + controllerId + "\", \"status\":\"reconnected\"}";
-            client.publish("controller/status", reconnectMessage.c_str());
-
-          return true;  // Successfully connected  
+        
+        
+        // Publish online status
+        if (client.publish(willTopic, "online", true)) {
+            Serial.println("Published online status.");
+        }
+        
+        // Publish reconnection message
+        String reconnectMessage = "{\"controllerId\":\"" + controllerId + "\", \"status\":\"connected\"}";
+        client.publish("controller/status", reconnectMessage.c_str());
+        
+        return true;
     }
-    else{
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      delay(5000);
-      return false;  // Failed to connect
-    }
+    
+    Serial.print("Failed to connect, rc=");
+    Serial.println(client.state());
+    return false;   
+}
+/**
+ * @brief Attempts to reconnect to the MQTT server and subscribes to relevant topics.
+ * 
+ * @return True if reconnected successfully, false otherwise.
+ * 
+ * @ingroup mqtt
+ */
+bool reconnect()
+{
+  while (!client.connected())
+  {
+    Serial.print("Attempting MQTT connection...");
+        return connectMQTT();
   }
   return true;   // Already connected
 }
+
 
 /**
  * @brief Handles game start and input windows for color sequences.
@@ -282,6 +332,8 @@ void onSequenceReceived(int sequenceLength) {
 
 /**
  * @brief Requests the next color sequence for the game.
+ * 
+ * @ingroup game
  */
 void requestNextSequence() {
   String topic = "controller/request_sequence";
@@ -293,7 +345,11 @@ void requestNextSequence() {
     Serial.println("Failed to request next sequence");
   }
 }
-
+/**
+ * @brief Sends a heartbeat message to the MQTT server.
+ * 
+ * @ingroup mqtt
+ */
 void sendHeartbeat() {
   if (client.connected()) {
     String heartbeatMessage = "{\"controllerId\":\"" + controllerId + "\", \"status\":\"alive\"}";
@@ -302,12 +358,15 @@ void sendHeartbeat() {
   }
 }
 
+
 /**
  * @brief Callback function that handles incoming MQTT messages.
  * 
  * @param topic The topic of the incoming message.
  * @param payload The payload of the message.
  * @param length The length of the payload.
+ * 
+ * @ingroup mqtt
  */
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
     Serial.print("Message arrived [");
@@ -320,7 +379,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
     Serial.println(message);
 
-    if (String(topic) == "neopixel/display") {
+    if (String(topic) == "neopixel/display"+ controllerId) {
         gameStarted = true;
         hasLost = false;
         // Process color sequence
@@ -420,6 +479,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
  * 
  * This function checks for button presses, debounces them, and updates the
  * sequence of colors entered by the player.
+ * 
+ * @ingroup game
  */
 void game() {
     if (!gameStarted || hasLost) {
@@ -505,6 +566,11 @@ void game() {
     
 }
 
+/**
+ * @brief Initializes the game-related hardware and settings.
+ * 
+ * @ingroup hardware
+ */
 void setup()
 {
   Serial.begin(115200);
@@ -534,7 +600,11 @@ void setup()
 
 }
 
-
+/**
+ * @brief Main loop of the program, handles MQTT connection, game logic, and RFID checking.
+ * 
+ * @ingroup main
+ */
 void loop()
 {
 

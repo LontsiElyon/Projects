@@ -1,3 +1,11 @@
+/**
+ * @file display.cpp
+ * @brief Display management for the Simon Game application
+ * @details This file contains functions for interacting with the OLED display.
+ *          It includes initialization of the display, clearing the display, and displaying various messages
+ *          such as player information, game over messages, and countdowns. It uses the Adafruit SSD1306 library 
+ *          to control the OLED display and provide visual feedback for the game.
+ */
 #include "display.h"
 #include <Adafruit_SSD1306.h>
 #include "display.h"

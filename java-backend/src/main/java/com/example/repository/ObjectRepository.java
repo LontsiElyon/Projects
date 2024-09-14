@@ -1,3 +1,19 @@
+/**
+ * @file ObjectRepository.java
+ * @brief The ObjectRepository class provides methods for performing database operations related to controllers, players, sessions,
+ * and assignments.
+ * 
+ * The ObjectRepository class provides methods for performing database operations related to controllers, players, sessions,
+ * and assignments. It includes functionality for CRUD operations on controllers, players, and sessions, as well as handling
+ * RFID and frontend assignments. The class ensures interaction with the database is managed efficiently and correctly.
+ * 
+ * @defgroup object_repository Object Repository
+ * @brief This module contains database operations for managing controllers, players, and sessions in the application.
+ * 
+ * The ObjectRepository class provides various methods for interacting with the database. This includes
+ * CRUD operations on controllers, players, sessions, and managing RFID/Frontend assignments.
+ * @{
+ */
 package com.example.repository;
 
 import io.vertx.core.AsyncResult;
@@ -19,16 +35,37 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * @brief The repository class for performing database operations.
+ * 
+ * This class contains methods for handling database CRUD operations for controllers, players, sessions,
+ * and RFID or frontend assignments. Each method is designed to interact with the database using Vert.x JDBC or SQL clients.
+ */
 public class ObjectRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(ObjectRepository.class);
 
     private final Pool jdbcPool;
-
+    /**
+     * @brief Constructor for ObjectRepository
+     * 
+     * Initializes the repository with the provided JDBC pool.
+     * 
+     * @param jdbcPool The JDBC pool used for database queries.
+     */
     public ObjectRepository(Pool jdbcPool) {
         this.jdbcPool = jdbcPool;
     }
-
+    
+    /**
+     * @ingroup object_repository
+     * @brief Inserts or updates a controller's status to 'online'.
+     * 
+     * This method inserts a new controller or updates its status to 'online' if it already exists in the database.
+     * 
+     * @param controllerId The unique ID of the controller.
+     * @param resultHandler The result handler that returns success or failure.
+     */
     public void insertController(String controllerId, Handler<AsyncResult<Void>> resultHandler) {
         // Prepare SQL statement to insert controller data
         String sql = "INSERT INTO Controllers (controller_id, status) VALUES (?, 'online') " +
@@ -49,7 +86,15 @@ public class ObjectRepository {
         
     
     }
-
+    
+    /**
+     * @ingroup object_repository
+     * @brief Fetches all online controllers.
+     * 
+     * This method retrieves a list of controllers that are currently online from the database.
+     * 
+     * @param resultHandler The result handler that returns a JsonArray of online controllers or a failure.
+     */
     public void fetchControllers(Handler<AsyncResult<JsonArray>> resultHandler) {
         // SQL query to select controller_id and status from the Controllers table where the status is 'online'
         String sql = "SELECT controller_id, status FROM Controllers WHERE status = 'online'";
@@ -78,7 +123,15 @@ public class ObjectRepository {
             }
         });
     }
-
+    
+    /**
+     * @ingroup object_repository
+     * @brief Retrieves a list of connected controllers.
+     * 
+     * This method retrieves all controller IDs from active sessions where a player is associated.
+     * 
+     * @param resultHandler The result handler that returns a list of connected controller IDs or a failure.
+     */
     public void getConnectedControllers(Handler<AsyncResult<List<String>>> resultHandler) {
         // SQL query to retrieve all controller IDs from active sessions (with a player associated)
         String query = "SELECT controller_id FROM Sessions WHERE end_time IS NULL AND player_id IS NOT NULL";
@@ -97,8 +150,15 @@ public class ObjectRepository {
         });
     }
 
-   
-
+    /**
+     * @ingroup object_repository
+     * @brief Checks if a controller is in use based on RFID assignments.
+     * 
+     * This method checks the database to determine if a controller is currently in use based on RFID assignments.
+     * 
+     * @param controllerId The unique ID of the controller.
+     * @param resultHandler The result handler that returns true if the controller is in use, otherwise false.
+     */
     public void isControllerInUse(String controllerId, Handler<AsyncResult<Boolean>> resultHandler) {
         // Query the database to check if the controller is already in use
         String query = "SELECT COUNT(*) FROM RfidAssignments WHERE controller_id = ?";
@@ -118,6 +178,7 @@ public class ObjectRepository {
                   }
               });
     }
+    
 
     public void isControllerInUseInFrontend(String controllerId, Handler<AsyncResult<Boolean>> resultHandler) {
         // Query the database to check if the controller is already in use in frontend assignments
@@ -138,7 +199,17 @@ public class ObjectRepository {
                     }
                 });
     }
-
+    
+    /**
+     * @ingroup object_repository
+     * @brief Inserts a new player into the database.
+     * 
+     * This method registers a player with a given username and returns the player's unique ID.
+     * If the username already exists, it updates the existing player's record.
+     * 
+     * @param username The name of the player.
+     * @param resultHandler The result handler that returns the player ID or a failure.
+     */
      public void insertPlayer(String username, Handler<AsyncResult<Integer>> resultHandler) {
         // SQL query to insert a player into the Players table with username.
        // If the username already exists, update the existing record's username.
@@ -160,7 +231,19 @@ public class ObjectRepository {
                     }
                 });
     }
-
+    
+    /**
+     * @ingroup object_repository
+     * @brief Creates a new session in the database.
+     * 
+     * This method creates a new session entry in the Sessions table with the given player ID, controller ID,
+     * and login method.
+     * 
+     * @param playerId The unique ID of the player.
+     * @param controllerId The unique ID of the controller.
+     * @param loginMethod The method used for login.
+     * @param resultHandler The result handler that returns success or failure.
+     */
     public void createSession(int playerId, String controllerId, String loginMethod, Handler<AsyncResult<Void>> resultHandler) {
         // SQL query to create a new session in the Sessions table
         String sql = "INSERT INTO Sessions (player_id, controller_id, login_method) VALUES (?, ?, ?)";
@@ -183,7 +266,16 @@ public class ObjectRepository {
                 }
             });
     }
-
+    /**
+     * @ingroup object_repository
+     * @brief Records a frontend assignment for a player and controller.
+     * 
+     * This method inserts a new record into the FrontendAssignments table for the given player ID and controller ID.
+     * 
+     * @param playerId The unique ID of the player.
+     * @param controllerId The unique ID of the controller.
+     * @param resultHandler The result handler that returns success or failure.
+     */
     public void recordFrontendAssignment(int playerId, String controllerId, Handler<AsyncResult<Void>> resultHandler) {
         // SQL query to record an assignment in the FrontendAssignments table
         String sql = "INSERT INTO FrontendAssignments (player_id, controller_id) VALUES (?, ?)";
@@ -202,7 +294,15 @@ public class ObjectRepository {
                 }
             });
     }
-
+    /**
+     * @ingroup object_repository
+     * @brief Finds a player by RFID tag.
+     * 
+     * This method retrieves the player ID associated with the given RFID tag from the Players table.
+     * 
+     * @param rfidTag The RFID tag of the player.
+     * @param resultHandler The result handler that returns the player ID or -1 if not found.
+     */
     public void findPlayerByRfid(String rfidTag, Handler<AsyncResult<Integer>> resultHandler) {
         // SQL query to find a player by RFID tag in the Players table
         String sql = "SELECT player_id FROM Players WHERE rfid_tag = ?";
@@ -225,7 +325,17 @@ public class ObjectRepository {
             }
         });
     }
-    
+    /**
+     * @ingroup object_repository
+     * @brief Inserts a player with an RFID tag.
+     * 
+     * This method inserts a new player with the specified username and RFID tag into the Players table.
+     * If the player already exists, it updates the existing record and returns the player ID.
+     * 
+     * @param username The name of the player.
+     * @param rfidTag The RFID tag associated with the player.
+     * @param resultHandler The result handler that returns the player ID or a failure.
+     */
     public void insertPlayerWithRfid(String username,String rfidTag, Handler<AsyncResult<Integer>> resultHandler) {
         
         // SQL query to insert a player with an RFID tag into the Players table
@@ -244,7 +354,17 @@ public class ObjectRepository {
             }
         });
     }
-    
+    /**
+     * @ingroup object_repository
+     * @brief Records an RFID assignment.
+     * 
+     * This method records an assignment of an RFID tag to a player and controller in the RfidAssignments table.
+     * 
+     * @param playerId The unique ID of the player.
+     * @param controllerId The unique ID of the controller.
+     * @param rfidTag The RFID tag associated with the assignment.
+     * @param resultHandler The result handler that returns success or failure.
+     */
     public void RfidAssignments(int playerId, String controllerId, String rfidTag, Handler<AsyncResult<Void>> resultHandler) {
         // SQL query to record an RFID assignment in the RfidAssignments table
         String sql = "INSERT INTO RfidAssignments (player_id, controller_id, rfid_tag) VALUES (?, ?, ?)";
@@ -260,7 +380,16 @@ public class ObjectRepository {
             }
         });
     }
-
+    /**
+     * @ingroup object_repository
+     * @brief Fetches display information by controller ID.
+     * 
+     * This method retrieves display information, including points, round, last update time, and the username of the player,
+     * associated with a specific controller ID.
+     * 
+     * @param controllerId The unique ID of the controller.
+     * @param resultHandler The result handler that returns the display information as a JsonObject or a failure.
+     */
     public void fetchDisplayInfoByControllerId(String controllerId, Handler<AsyncResult<JsonObject>> resultHandler) {
         String query = "SELECT d.controller_id, d.points, d.round, d.last_update, p.username " +
                        "FROM DisplayInfo d " +
@@ -286,7 +415,15 @@ public class ObjectRepository {
             }
         });
     }
-
+     /**
+     * @ingroup object_repository
+     * @brief Fetches the player ID associated with a specific controller ID.
+     * 
+     * This method retrieves the player ID of an active session associated with a given controller ID.
+     * 
+     * @param controllerId The unique ID of the controller.
+     * @return A Future containing the player ID or null if no active session is found.
+     */
     public Future<Integer> fetchPlayerIdByControllerId(String controllerId) {
         String query = "SELECT player_id FROM Sessions WHERE controller_id = ? AND end_time IS NULL";
         return jdbcPool.preparedQuery(query)
@@ -300,7 +437,17 @@ public class ObjectRepository {
                 }
             });
     }
-
+    /**
+     * @ingroup object_repository
+     * @brief Fetches the current round for a player and controller.
+     * 
+     * This method retrieves the current round number for a player and controller from the Sessions table.
+     * If no active session is found, it defaults to round 1.
+     * 
+     * @param controllerId The unique ID of the controller.
+     * @param playerId The unique ID of the player.
+     * @return A Future containing the current round number.
+     */
     public Future<Integer> fetchCurrentRoundByControllerId(String controllerId, int playerId) {
         String selectQuery = "SELECT round FROM Sessions WHERE controller_id = ? AND player_id = ? AND end_time IS NULL";
     
@@ -320,7 +467,18 @@ public class ObjectRepository {
                 logger.error("Failed to retrieve current round for controller {}: {}", controllerId, cause.getMessage());
             });
     }
-
+    /**
+     * @ingroup object_repository
+     * @brief Updates the points for a given player and controller.
+     * 
+     * This method updates the points for the current round of a given player and controller. If no record is found,
+     * a new one is inserted. It also ensures the username is updated.
+     * 
+     * @param controllerId The unique ID of the controller.
+     * @param playerId The unique ID of the player.
+     * @param round The current round number.
+     * @return A Future indicating the result of the update operation.
+     */
     public Future<Void> updatePoints(String controllerId, int playerId, int round) {
         return fetchUsernameByPlayerId(playerId)  // Fetch the username
             .compose(username -> {
@@ -338,7 +496,18 @@ public class ObjectRepository {
                     });
             });
     }
-    
+    /**
+     * @ingroup object_repository
+     * @brief Inserts new display information for a player and controller.
+     * 
+     * This method inserts a new record into the DisplayInfo table with initial points set to 1.
+     * 
+     * @param controllerId The unique ID of the controller.
+     * @param playerId The unique ID of the player.
+     * @param round The round number.
+     * @param username The username of the player.
+     * @return A Future indicating the result of the insert operation.
+     */
     private Future<Void> insertDisplayInfo(String controllerId, int playerId, int round, String username) {
         String insertQuery = "INSERT INTO DisplayInfo (controller_id, player_id, round, points, username) VALUES (?, ?, 1, ?, ?)";
         return jdbcPool.preparedQuery(insertQuery)
@@ -347,7 +516,15 @@ public class ObjectRepository {
             .mapEmpty();
     }
 
-    
+    /**
+     * @ingroup object_repository
+     * @brief Fetches the username for a given player ID.
+     * 
+     * This method retrieves the username associated with a specific player ID from the Players table.
+     * 
+     * @param playerId The unique ID of the player.
+     * @return A Future containing the username or null if not found.
+     */
     private Future<String> fetchUsernameByPlayerId(int playerId) {
         String query = "SELECT user_name FROM Players WHERE player_id = ?";
         return jdbcPool.preparedQuery(query)
@@ -361,7 +538,17 @@ public class ObjectRepository {
                 }
             });
     }
-
+    /**
+     * @ingroup object_repository
+     * @brief Fetches display information for a specific controller and round.
+     * 
+     * This method retrieves the display information including username, points, and round from the DisplayInfo table
+     * for a given controller ID and round number.
+     * 
+     * @param controllerId The unique ID of the controller.
+     * @param round The round number.
+     * @return A Future containing the display information as a JsonObject.
+     */
     public Future<JsonObject> fetchDisplayInfo(String controllerId, int round) {
         String query = "SELECT username, points, round FROM DisplayInfo WHERE controller_id = ? AND round = ?";
         return jdbcPool.preparedQuery(query)
@@ -379,7 +566,16 @@ public class ObjectRepository {
             })
             .onFailure(cause -> logger.error("Failed to fetch display info for controller {} and round {}: {}", controllerId, round, cause.getMessage()));
     }
-
+     /**
+     * @ingroup object_repository
+     * @brief Creates a new round for a given controller.
+     * 
+     * This method updates the end time of the current round and inserts a new session for the next round,
+     * as well as initializes new display information for that round.
+     * 
+     * @param controllerId The unique ID of the controller.
+     * @return A Future indicating the result of the operation.
+     */
     public Future<Void> createNewRound(String controllerId) {
         return jdbcPool.withTransaction(client -> {
             // First, get the current session info
@@ -422,7 +618,15 @@ public class ObjectRepository {
         });
     }
    
-
+    /**
+     * @ingroup object_repository
+     * @brief Fetches the current round number for a given controller.
+     * 
+     * This method retrieves the highest round number from the Sessions table where the end time is NULL for a given controller ID.
+     * 
+     * @param controllerId The unique ID of the controller.
+     * @return A Future containing the current round number or 0 if no active session is found.
+     */
     public Future<Integer> fetchCurrentRound(String controllerId) {
         String query = "SELECT MAX(round) as current_round FROM Sessions WHERE controller_id = ? AND end_time IS NULL";
         return jdbcPool.preparedQuery(query)
@@ -437,7 +641,15 @@ public class ObjectRepository {
             });
     }
 
-
+    /**
+     * @ingroup object_repository
+     * @brief Fetches the highest score for a specific player.
+     * 
+     * This method retrieves the maximum points achieved by a player from the DisplayInfo table.
+     * 
+     * @param playerId The unique ID of the player.
+     * @return Future with the highest score or 0 if no scores are found.
+     */
     public Future<Integer> fetchHighestScore(int playerId) {
         String query = "SELECT MAX(points) as highest_score FROM DisplayInfo WHERE player_id = ?";
         return jdbcPool.preparedQuery(query)
@@ -450,7 +662,15 @@ public class ObjectRepository {
                 }
             });
     }
-
+    /**
+     * @ingroup object_repository
+     * @brief Updates the high score for a specific player.
+     * 
+     * This method updates the high_score field for a player in the Players table based on the highest score found in DisplayInfo.
+     * 
+     * @param playerId The unique ID of the player.
+     * @return Future indicating the completion of the update.
+     */
     public Future<Void> updateHighScore(int playerId) {
         return fetchHighestScore(playerId)
             .compose(highestScore -> {
@@ -460,7 +680,14 @@ public class ObjectRepository {
                     .mapEmpty();
             });
     }
-
+    /**
+     * @ingroup object_repository
+     * @brief Retrieves the winner of the current round.
+     * 
+     * This method finds the player with the highest points in the current round and returns their username and round number.
+     * 
+     * @param resultHandler Handler for the result or failure.
+     */
     public void getRoundWinner(Handler<AsyncResult<JsonObject>> resultHandler) {
         String query = "SELECT round, username FROM DisplayInfo WHERE round = (SELECT MAX(round) FROM DisplayInfo) ORDER BY points DESC LIMIT 1";
         jdbcPool.preparedQuery(query).execute(ar -> {
@@ -486,5 +713,5 @@ public class ObjectRepository {
 
 }  
 
-    
+  /** @} */ // End of object_repository group  
 

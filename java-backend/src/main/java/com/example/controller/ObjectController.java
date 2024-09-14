@@ -1,3 +1,26 @@
+/**
+ * @file ObjectController.java
+ * @brief Controller class to manage routing, handle MQTT messages, and interact with ObjectService.
+ * 
+ * This class handles HTTP requests via the Vert.x router and MQTT messages for controllers.
+ * It processes messages like controller connection, RFID scans, color sequence generation, and more.
+ * 
+ * @date 2024
+ 
+
+
+ * @defgroup ObjectController ObjectController
+ * @brief Group for ObjectController class and its related components.
+ * 
+ * This group includes all functions related to handling MQTT messages, controller connections, 
+ * color sequence generation, and various HTTP routes.
+ * 
+ * @{
+ */
+/** 
+ * @package com.example.controller
+ * @brief Description of the package
+ */
 package com.example.controller;
 
 import io.vertx.core.Vertx;
@@ -24,10 +47,12 @@ import io.vertx.core.json.JsonObject;
 
 /**
  * @class ObjectController
- * @brief Handles object-related operations and MQTT communications
- *
- * This class manages object operations, MQTT message handling, and game logic
- * for a multiplayer game system.
+ * @brief Handles HTTP routes and MQTT messages for controller management.
+ * 
+ * This class sets up HTTP routes, listens to MQTT messages from controllers, and 
+ * manages player and controller interactions, including color sequence generation for games.
+ * 
+ * @ingroup ObjectController
  */
 public class ObjectController {
 
@@ -39,10 +64,14 @@ public class ObjectController {
     private static final long HEARTBEAT_TIMEOUT = 30000; // 30 seconds
     
     /**
-     * @brief Constructor for ObjectController
-     * @param router The Vert.x router for HTTP endpoints
-     * @param objectService The service handling object-related operations
-     * @param mqttClient The MQTT client for pub/sub communications
+     * @brief Constructor for ObjectController class.
+     * 
+     * Initializes the controller with necessary services and sets up HTTP routes.
+     * 
+     * @param router Vert.x router to register HTTP routes.
+     * @param objectService Service for interacting with controllers and players.
+     * @param mqttClient MQTT client for handling MQTT messages.
+     * @ingroup ObjectController
      */
     public ObjectController(Router router, ObjectService objectService, MqttClient mqttClient) {
         this.objectService = objectService;
@@ -59,7 +88,10 @@ public class ObjectController {
 
 
     /**
-     * @brief Sets up MQTT handlers for various topics
+     * @brief Sets up MQTT message handlers for controller interactions.
+     * 
+     * Handles MQTT messages for controller connections, RFID scans, color sequences, and heartbeats.
+     * @ingroup ObjectController
      */
     public void setupMqttHandlers() {
 
@@ -137,8 +169,12 @@ public class ObjectController {
    
     
     /**
-     * @brief Handles incoming connection messages from controllers
-     * @param payload The payload containing the controller ID
+     * @brief Handles controller connection via MQTT message.
+     * 
+     * Registers the controller and publishes an acknowledgment message.
+     * 
+     * @param payload MQTT message payload containing controller ID.
+     * @ingroup ObjectController
      */
     // Handle incoming connection messages from controllers
     private void handleControllerConnect(Buffer payload) {
@@ -159,6 +195,14 @@ public class ObjectController {
         });
     }
 
+    /**
+     * @brief Handles heartbeats from controllers via MQTT message.
+     * 
+     * Updates the heartbeat timestamp for the controller.
+     * 
+     * @param payload MQTT message payload containing controller heartbeat information.
+     * @ingroup ObjectController
+     */
     private void handleControllerHeartbeat(Buffer payload) {
         JsonObject heartbeatJson = payload.toJsonObject();
         String controllerId = heartbeatJson.getString("controllerId");
@@ -185,15 +229,27 @@ public class ObjectController {
             }
         }
     }
-
+    
+    /**
+     * @brief Handles heartbeats from controllers via MQTT message.
+     * 
+     * Updates the heartbeat timestamp for the controller.
+     * 
+     * @param payload MQTT message payload containing controller heartbeat information.
+     * @ingroup ObjectController
+     */
     private boolean isControllerActive(String controllerId) {
         Long lastBeat = lastHeartbeat.get(controllerId);
         return lastBeat != null && (System.currentTimeMillis() - lastBeat) < HEARTBEAT_TIMEOUT;
     }
 
      /**
-     * @brief Handles fetching available controllers
-     * @param ctx The routing context for the HTTP request
+     * @brief Handles fetching available controllers via HTTP GET.
+     * 
+     * Fetches the list of connected controllers from the service.
+     * 
+     * @param ctx RoutingContext of the HTTP request.
+     * @ingroup ObjectController
      */
     private void handleFetchControllers(RoutingContext ctx) {
         // Call the service to get the available controllers
@@ -213,8 +269,12 @@ public class ObjectController {
     }
 
     /**
-     * @brief Handles player login requests
-     * @param ctx The routing context for the HTTP request
+     * @brief Handles player login via HTTP POST.
+     * 
+     * Registers the player and creates a session for the given controller.
+     * 
+     * @param ctx RoutingContext of the HTTP request.
+     * @ingroup ObjectController
      */
     private void handleLogin(RoutingContext ctx) {
         // Extract username and controllerId from the HTTP request parameters
@@ -244,9 +304,14 @@ public class ObjectController {
         });
     }
         
-        /**
-     * @brief Handles RFID scan messages
-     * @param payload The payload containing RFID scan data
+     /**
+     * @brief Handles incoming RFID scan messages from controllers via MQTT.
+     * 
+     * Converts the payload to extract the controller ID and username, then registers the player.
+     * Notifies the frontend upon successful registration of the controller.
+     * 
+     * @param payload MQTT message payload containing RFID scan information.
+     * @ingroup ObjectController
      */
         // Handle incoming RFID scan messages
     private void handleRfidScan(Buffer payload) {
@@ -290,9 +355,13 @@ public class ObjectController {
     private List<String> connectedControllers = new ArrayList<>();
     private List<String> controllersWaitingForSequence = new ArrayList<>();
     
-    /**
-     * @brief Handles sequence generation requests
-     * @param routingContext The routing context for the HTTP request
+   /**
+     * @brief Handles the generation of a color sequence for a game.
+     * 
+     * Fetches connected controllers and starts the game sequence generation process.
+     * 
+     * @param routingContext RoutingContext of the HTTP request.
+     * @ingroup ObjectController
      */
     private void handleGenerateSequence(RoutingContext routingContext) {
         // Retrieve the list of connected controllers
@@ -335,8 +404,12 @@ public class ObjectController {
 
 
     /**
-     * @brief Handles sequence requests from controllers
-     * @param payload The payload containing the controller ID
+     * @brief Handles a request from the controller for the next color sequence.
+     * 
+     * Adds the controller to the waiting list and sends the next sequence if possible.
+     * 
+     * @param payload MQTT message payload containing the controller ID.
+     * @ingroup ObjectController
      */
     private void handleSequenceRequest(Buffer payload) {
     String controllerId = payload.toString();
@@ -353,46 +426,70 @@ public class ObjectController {
     }
     
     /**
-     * @brief Sends the next color sequence to specified controllers
-     * @param controllers List of controller IDs to receive the sequence
-     * @return A Future indicating the completion of the operation
+     * @brief Sends the next color sequence to the list of controllers.
+     * 
+     * Generates a color sequence and publishes it to the active controllers.
+     * 
+     * @param controllers List of active controllers.
+     * @return A future representing the completion of the operation.
+     * @ingroup ObjectController
      */
     private Future<Void> sendNextSequence(List<String> controllers) {
-        List<Future<Void>> futures = new ArrayList<>();
-        currentColorSequence = objectService.generateColorSequence();
-        String message = currentColorSequence.encode();
-        String topic = "neopixel/display";
-
-        for (String controllerId : controllers) {
-            if (isControllerActive(controllerId)) {
-                Promise<Void> promise = Promise.promise();
-                mqttClient.publish(topic,
-                    Buffer.buffer(message),
-                    MqttQoS.AT_LEAST_ONCE,
-                    false,
-                    false,
-                    ar -> {
-                        if (ar.succeeded()) {
-                            logger.info("Color sequence sent to controller {}: {}", controllerId, message);
-                            promise.complete();
-                        } else {
-                            logger.error("Failed to send color sequence to controller {}", controllerId, ar.cause());
-                            promise.fail(ar.cause());
-                        }
-                    });
-                futures.add(promise.future());
-            } else {
-                logger.warn("Controller {} is not active, skipping sequence send", controllerId);
-            }
+    Promise<Void> promise = Promise.promise();
+    
+    // Generate a single color sequence for this round
+    currentColorSequence = objectService.generateColorSequence();
+    String message = currentColorSequence.encode();
+    
+    List<Future<Void>> publishFutures = new ArrayList<>();
+    
+    for (String controllerId : controllers) {
+        if (isControllerActive(controllerId)) {
+            String topic = "neopixel/display" + controllerId;
+            Promise<Void> publishPromise = Promise.promise();
+            
+            mqttClient.publish(topic,
+                Buffer.buffer(message),
+                MqttQoS.AT_LEAST_ONCE,
+                false,
+                false,
+                ar -> {
+                    if (ar.succeeded()) {
+                        logger.info("Color sequence sent to controller {}: {}", controllerId, message);
+                        publishPromise.complete();
+                    } else {
+                        logger.error("Failed to send color sequence to controller {}", controllerId, ar.cause());
+                        publishPromise.fail(ar.cause());
+                    }
+                });
+            publishFutures.add(publishPromise.future());
+        } else {
+            logger.warn("Controller {} is not active, skipping sequence send", controllerId);
         }
-
-        return Future.all(futures).mapEmpty();
     }
     
-    /**
-     * @brief Notifies a controller of their loss
-     * @param controllerId The ID of the controller to notify
-     */
+    // Wait for all publish operations to complete
+    Future.all(publishFutures).onComplete(ar -> {
+        if (ar.succeeded()) {
+            logger.info("Sequence sent to all active controllers for round {}", roundsPlayed.get());
+            promise.complete();
+        } else {
+            logger.error("Failed to send sequence to all controllers", ar.cause());
+            promise.fail(ar.cause());
+        }
+    });
+    
+    return promise.future();
+    }
+    
+   /**
+ * @brief Notifies a controller when a player has lost the game.
+ * 
+ * Sends a "Game Over" message to the specified controller via MQTT.
+ * 
+ * @param controllerId ID of the controller to notify.
+ * @ingroup ObjectController
+ */
     private void notifyControllerOfLoss(String controllerId) {
         JsonObject lossMessage = new JsonObject()
             .put("username", "Game Over")
@@ -417,9 +514,14 @@ public class ObjectController {
     }
     
     /**
-     * @brief Handles color sequence submissions from controllers
-     * @param payload The payload containing the submitted sequence
-     * @return A Future indicating whether the sequence matched
+     * @brief Handles the incoming color sequence from the controller and compares it with the correct sequence.
+     * 
+     * Compares the received sequence with the correct one and updates points accordingly.
+     * Notifies the controller if they lost or won the round.
+     * 
+     * @param payload MQTT message payload containing the controller ID and received color sequence.
+     * @return A Future<Boolean> indicating the success or failure of the sequence comparison.
+     * @ingroup ObjectController
      */
     public Future<Boolean> handleColorSequence(Buffer payload) {
         Promise<Boolean> promise = Promise.promise();
@@ -461,8 +563,13 @@ public class ObjectController {
     }
      
     /**
-     * @brief Handles player loss events
-     * @param controllerId The ID of the controller that lost
+     * @brief Handles the event when a player loses the game.
+     * 
+     * Decrements the active player count and removes the disconnected controller from the list.
+     * If no players are left, starts a new round.
+     * 
+     * @param controllerId ID of the controller representing the player who lost.
+     * @ingroup ObjectController
      */
     private void handlePlayerLoss(String controllerId) {
         int remainingPlayers = activePlayers.decrementAndGet();
@@ -471,7 +578,7 @@ public class ObjectController {
         // Remove the disconnected controller from the connectedControllers list
         connectedControllers.remove(controllerId);
     
-        if (remainingPlayers <= 0 || connectedControllers.isEmpty()) {
+        if (remainingPlayers <= 0 ) {
             startNewRound();
         } else {
             logger.info("Waiting for other players to complete their turns.");
@@ -479,8 +586,12 @@ public class ObjectController {
     } 
     
     /**
-     * @brief Handles player status updates
-     * @param payload The payload containing the player status
+     * @brief Handles incoming player status updates from controllers via MQTT.
+     * 
+     * Processes status messages, such as a player losing the game.
+     * 
+     * @param payload MQTT message payload containing controller ID and player status.
+     * @ingroup ObjectController
      */
     private void handlePlayerStatus(Buffer payload) {
         JsonObject payloadJson = payload.toJsonObject();
@@ -500,8 +611,12 @@ public class ObjectController {
     }
     
     /**
-     * @brief Handles fetching the winner of a round
-     * @param ctx The routing context for the HTTP request
+     * @brief Handles fetching the winner of the current round via an HTTP request.
+     * 
+     * Retrieves the round winner from the service and sends the result back to the client.
+     * 
+     * @param ctx RoutingContext of the HTTP request.
+     * @ingroup ObjectController
      */
     // New method to handle fetching round winner
     private void handleFetchRoundWinner(RoutingContext ctx) {
@@ -534,7 +649,11 @@ public class ObjectController {
     }
 
     /**
-     * @brief Starts a new round of the game
+     * @brief Starts a new game round after all players have lost or the round limit is reached.
+     * 
+     * Resets the game state, increments the round counter, and starts a new round for all connected controllers.
+     * 
+     * @ingroup ObjectController
      */
     private void startNewRound() {
     
@@ -589,9 +708,14 @@ public class ObjectController {
     }
     
     /**
-     * @brief Sends a countdown signal to all connected controllers
-     * @param controllers List of controller IDs to receive the countdown
-     * @return A Future indicating the completion of the operation
+     * @brief Sends a countdown signal to all connected controllers.
+     * 
+     * Iterates over the list of controllers and sends a countdown message to each one.
+     * Uses MQTT to publish the countdown signal.
+     * 
+     * @param controllers List of controller IDs to send the countdown to.
+     * @return A Future<Void> that completes when all countdown messages are sent.
+     * @ingroup ObjectController
      */
     private Future<Void> sendCountdownToAllControllers(List<String> controllers) {
         List<Future<Void>> futures = new ArrayList<>();
@@ -624,8 +748,12 @@ public class ObjectController {
     }
 
      /**
-     * @brief Sends display information to a specific controller
-     * @param controllerId The ID of the controller to receive the information
+     * @brief Sends display information to a specific controller.
+     * 
+     * Fetches the current round and corresponding display information from the service, then publishes it to the controller's display topic.
+     * 
+     * @param controllerId ID of the controller to send the display information to.
+     * @ingroup ObjectController
      */
     public void sendDisplayInfoToController(String controllerId) {
         // First, fetch the current round
@@ -660,7 +788,11 @@ public class ObjectController {
 
     
     /**
-     * @brief Stops the game and performs end-game operations
+     * @brief Stops the game after the game has reached the round limit (5 rounds).
+     * 
+     * Retrieves all connected controllers, sends a game-over message, and updates the high scores for each player.
+     * 
+     * @ingroup ObjectController
      */
     private void stopGame() {
         logger.info("Game has reached 5 rounds. Stopping the game.");
@@ -690,8 +822,12 @@ public class ObjectController {
     }
     
     /**
-     * @brief Notifies a specific controller that the game has ended
-     * @param controllerId The ID of the controller to notify
+     * @brief Notifies a controller that the game has ended.
+     * 
+     * Sends a "Game Over" message with the current round number to the controller's display topic.
+     * 
+     * @param controllerId ID of the controller to notify.
+     * @ingroup ObjectController
      */
     // Method to notify a specific controller that the game has ended
     private void notifyControllerOfGameEnd(String controllerId) {
@@ -717,5 +853,7 @@ public class ObjectController {
 
 
 }
+
+/** @} */
 
 

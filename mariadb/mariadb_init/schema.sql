@@ -1,5 +1,14 @@
 
--- Table to store information about controllers
+/**
+ * @file schema.sql
+ * @brief SQL schema for the RFID-based game system
+ * @details This script creates the necessary tables to store information about controllers, players, sessions, RFID reads, frontend assignments, and display updates.
+ */
+
+/**
+ * @brief Table to store information about controllers
+ * @details This table keeps track of controller statuses and their heartbeat signals.
+ */
 CREATE TABLE Controllers (
     controller_id VARCHAR(50) PRIMARY KEY,  -- Unique identifier for each controller, serving as the primary key
     status ENUM('online', 'offline') DEFAULT 'offline',  -- Status of the controller, with a default value of 'offline'
@@ -7,7 +16,10 @@ CREATE TABLE Controllers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- Timestamp when the controller record was created
 );
 
--- Table to store information about players
+/**
+ * @brief Table to store information about players
+ * @details This table stores details about players, including their usernames, RFID tags, and high scores.
+ */
 CREATE TABLE Players (
     player_id INT AUTO_INCREMENT PRIMARY KEY,  -- Unique identifier for each player, auto-incremented
     user_name VARCHAR(100),  -- Name of the player
@@ -16,7 +28,10 @@ CREATE TABLE Players (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- Timestamp when the player record was created
 );
 
--- Table to store session details
+/**
+ * @brief Table to store session details
+ * @details This table logs the player sessions and records which controller is used in each session.
+ */
 CREATE TABLE Sessions (
     session_id INT AUTO_INCREMENT PRIMARY KEY,  -- Unique identifier for each session, auto-incremented
     player_id INT,  -- Foreign key referencing Players table, identifies the player in the session
@@ -34,7 +49,10 @@ CREATE TABLE Sessions (
     FOREIGN KEY (controller_id) REFERENCES Controllers(controller_id)  -- Establishes a relationship with the Controllers table
 );
 
--- Table to log RFID read events
+/**
+ * @brief Table to log RFID read events
+ * @details Stores logs of RFID reads by controllers, including the timestamp and related player information.
+ */
 CREATE TABLE RfidAssignments(
     log_id INT AUTO_INCREMENT PRIMARY KEY,  -- Unique identifier for each RFID log entry, auto-incremented
     player_id INT,  -- Foreign key referencing Players table, identifies the player associated with the RFID log
@@ -45,7 +63,10 @@ CREATE TABLE RfidAssignments(
     FOREIGN KEY (controller_id) REFERENCES Controllers(controller_id)  -- Establishes a relationship with the Controllers table
 );
 
--- Table to record frontend assignments of players to controllers
+/**
+ * @brief Table to record frontend assignments of players to controllers
+ * @details Logs when a player is assigned to a controller via the frontend interface.
+ */
 CREATE TABLE FrontendAssignments (
     assignment_id INT AUTO_INCREMENT PRIMARY KEY,  -- Unique identifier for each frontend assignment, auto-incremented
     player_id INT,  -- Foreign key referencing Players table, identifies the player in the assignment
@@ -55,7 +76,10 @@ CREATE TABLE FrontendAssignments (
     FOREIGN KEY (controller_id) REFERENCES Controllers(controller_id)  -- Establishes a relationship with the Controllers table
 );
 
--- Create the DisplayInfo table
+/**
+ * @brief Table to display information
+ * @details This table stores information to be displayed for each controller and player, including points and rounds.
+ */
 CREATE TABLE DisplayInfo (
     controller_id VARCHAR(50),  -- Identifier for the controller
     player_id INT,              -- Foreign key referencing Players table
