@@ -1,0 +1,5 @@
+<map id="displayPlayerInfo" name="displayPlayerInfo">
+<area shape="rect" id="Node000001" title="Displays player information on the OLED screen." alt="" coords="5,5,140,31"/>
+<area shape="rect" id="Node000002" href="$display_8cpp.html#ae50a53e622d9daf4ee388d49ebfb1d8e" title=" " alt="" coords="188,5,257,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="140,15,174,15,174,21,140,21"/>
+</map>

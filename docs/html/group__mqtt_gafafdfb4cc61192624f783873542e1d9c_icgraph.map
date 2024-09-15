@@ -1,0 +1,9 @@
+<map id="initializeControllerId" name="initializeControllerId">
+<area shape="rect" id="Node000001" title="Initializes and publishes the controller ID to the MQTT server." alt="" coords="397,5,552,31"/>
+<area shape="rect" id="Node000002" href="$main_8cpp.html#ab5a788a03971cae1e5e641ae9b1d7fe0" title=" " alt="" coords="239,5,349,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="384,21,350,21,350,15,384,15"/>
+<area shape="rect" id="Node000003" href="$group__mqtt.html#ga2540d74153b6b26f0727af62b7b25bf4" title="Attempts to reconnect to the MQTT server and subscribes to relevant topics." alt="" coords="104,5,191,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="225,21,191,21,191,15,225,15"/>
+<area shape="rect" id="Node000004" href="$main_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title="Main loop of the program, handles MQTT connection, game logic, and RFID checking." alt="" coords="5,5,56,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="90,21,56,21,56,15,90,15"/>
+</map>

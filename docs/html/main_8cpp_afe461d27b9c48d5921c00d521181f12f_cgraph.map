@@ -1,0 +1,21 @@
+<map id="loop" name="loop">
+<area shape="rect" id="Node000001" title="Main loop of the program, handles MQTT connection, game logic, and RFID checking." alt="" coords="5,129,56,155"/>
+<area shape="rect" id="Node000002" href="$main_8cpp.html#a9f1c87c7296779c4c895ca2b13ad2e3e" title="Handles the sequence of button inputs from players." alt="" coords="134,55,193,80"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="46,127,103,89,120,81,122,85,105,94,49,131"/>
+<area shape="rect" id="Node000006" href="$group__mqtt.html#ga2540d74153b6b26f0727af62b7b25bf4" title="Attempts to reconnect to the MQTT server and subscribes to relevant topics." alt="" coords="120,104,207,129"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="56,135,106,125,107,130,57,140"/>
+<area shape="rect" id="Node000009" href="$rfid_8cpp.html#adaed2c6ed5af438ad471281eb4235d1d" title="Checks for and processes RFID tags scanned by the controller." alt="" coords="119,153,207,179"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="57,144,106,153,105,158,56,149"/>
+<area shape="rect" id="Node000010" href="$group__mqtt.html#gab5aff384aaf666fd757c28f72b72b40a" title="Sends a heartbeat message to the MQTT server." alt="" coords="104,203,223,228"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="50,153,105,189,117,195,114,199,103,194,47,157"/>
+<area shape="rect" id="Node000003" href="$display_8cpp.html#a4ae4c7dfad3931d2ffbe03503498dce2" title="Displays a loss message on the OLED screen." alt="" coords="271,5,427,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="192,57,286,32,288,37,194,62"/>
+<area shape="rect" id="Node000005" href="$main_8cpp.html#a8c54f35ec82f9b30ca426a2ee48d8851" title=" " alt="" coords="291,55,407,80"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="193,65,277,65,277,70,193,70"/>
+<area shape="rect" id="Node000004" href="$display_8cpp.html#ae50a53e622d9daf4ee388d49ebfb1d8e" title=" " alt="" coords="517,5,587,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="427,15,504,15,504,21,427,21"/>
+<area shape="rect" id="Node000007" href="$main_8cpp.html#ab5a788a03971cae1e5e641ae9b1d7fe0" title=" " alt="" coords="293,104,404,129"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="207,114,279,114,279,119,207,119"/>
+<area shape="rect" id="Node000008" href="$group__mqtt.html#gafafdfb4cc61192624f783873542e1d9c" title="Initializes and publishes the controller ID to the MQTT server." alt="" coords="475,104,629,129"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="404,114,461,114,461,119,404,119"/>
+</map>

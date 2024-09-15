@@ -1,0 +1,11 @@
+<map id="displayLossMessage" name="displayLossMessage">
+<area shape="rect" id="Node000001" title="Displays a loss message on the OLED screen." alt="" coords="269,31,425,56"/>
+<area shape="rect" id="Node000002" href="$main_8cpp.html#a9f1c87c7296779c4c895ca2b13ad2e3e" title="Handles the sequence of button inputs from players." alt="" coords="137,5,196,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="255,33,196,25,196,19,256,28"/>
+<area shape="rect" id="Node000004" href="$group__mqtt.html#ga6f06b273defaebb581fdf1adc8969f40" title="Callback function that handles incoming MQTT messages." alt="" coords="112,55,221,80"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="256,58,222,63,221,57,255,53"/>
+<area shape="rect" id="Node000003" href="$main_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title="Main loop of the program, handles MQTT connection, game logic, and RFID checking." alt="" coords="9,5,60,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="123,21,60,21,60,15,123,15"/>
+<area shape="rect" id="Node000005" href="$group__hardware.html#ga4fc01d736fe50cf5b977f755b675f11d" title="Initializes the game&#45;related hardware and settings." alt="" coords="5,55,64,80"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="98,70,64,70,64,65,98,65"/>
+</map>

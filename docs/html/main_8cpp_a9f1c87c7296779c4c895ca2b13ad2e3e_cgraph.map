@@ -1,0 +1,9 @@
+<map id="game" name="game">
+<area shape="rect" id="Node000001" title="Handles the sequence of button inputs from players." alt="" coords="5,31,64,56"/>
+<area shape="rect" id="Node000002" href="$display_8cpp.html#a4ae4c7dfad3931d2ffbe03503498dce2" title="Displays a loss message on the OLED screen." alt="" coords="112,5,268,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="64,36,98,30,99,36,64,41"/>
+<area shape="rect" id="Node000004" href="$main_8cpp.html#a8c54f35ec82f9b30ca426a2ee48d8851" title=" " alt="" coords="132,55,248,80"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="64,45,119,54,118,59,64,50"/>
+<area shape="rect" id="Node000003" href="$display_8cpp.html#ae50a53e622d9daf4ee388d49ebfb1d8e" title=" " alt="" coords="316,5,385,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="268,15,302,15,302,21,268,21"/>
+</map>

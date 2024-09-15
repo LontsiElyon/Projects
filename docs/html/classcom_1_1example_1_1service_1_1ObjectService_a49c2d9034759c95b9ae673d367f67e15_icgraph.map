@@ -1,0 +1,5 @@
+<map id="com.example.service.ObjectService.checkControllerUsage" name="com.example.service.ObjectService.checkControllerUsage">
+<area shape="rect" id="Node000001" title="Checks if a controller is in use." alt="" coords="287,13,504,53"/>
+<area shape="rect" id="Node000002" href="$classcom_1_1example_1_1service_1_1ObjectService.html#a96715792f7bafc97e35d37e444c6bcf0" title="Registers a player and creates a session for them." alt="" coords="5,5,239,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="273,35,239,35,239,30,273,30"/>
+</map>

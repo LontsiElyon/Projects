@@ -1,0 +1,9 @@
+<map id="com.example.MainVerticle.start" name="com.example.MainVerticle.start">
+<area shape="rect" id="Node000001" title="Starts the verticle by initializing MQTT client, JDBC client, and HTTP server." alt="" coords="5,77,236,102"/>
+<area shape="rect" id="Node000002" href="$group__MainVerticleGroup.html#ga0e89989e54510649bc6a5f16ef212f7e" title="Configures and creates a JDBC client pool." alt="" coords="284,5,520,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="177,74,300,46,301,51,178,79"/>
+<area shape="rect" id="Node000003" href="$group__MainVerticleGroup.html#gadb6a6e8efec57d2faa5f8ffe72f2ca48" title="Configures and creates an MQTT client." alt="" coords="284,69,520,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="236,87,271,87,271,92,236,92"/>
+<area shape="rect" id="Node000004" href="$group__MainVerticleGroup.html#ga62aebbbd3c0acdc2774e097f2538f71d" title="Sets up the HTTP server router with CORS support and routes." alt="" coords="284,133,520,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="178,99,301,128,300,133,177,105"/>
+</map>

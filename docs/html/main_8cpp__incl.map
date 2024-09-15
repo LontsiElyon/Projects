@@ -1,0 +1,26 @@
+<map id="/home/elyon/Downloads/informatics&#45;project&#45;simon&#45;goes&#45;multiplayer&#45;group&#45;a/esp32&#45;project/src/main.cpp" name="/home/elyon/Downloads/informatics&#45;project&#45;simon&#45;goes&#45;multiplayer&#45;group&#45;a/esp32&#45;project/src/main.cpp">
+<area shape="rect" id="Node000001" title="Game controller using Wi&#45;Fi, MQTT, NeoPixel LEDs, and an RFID module." alt="" coords="420,5,613,89"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="513,211,597,236"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="420,58,280,71,135,92,75,107,31,123,17,132,10,141,9,151,15,161,38,173,84,183,219,200,372,211,500,217,499,223,372,217,218,205,83,189,37,178,11,165,4,152,5,139,14,128,28,119,73,102,134,87,279,66,419,52"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="25,137,88,163"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="420,71,102,140,101,135,419,66"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="113,137,233,163"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="421,79,226,136,224,131,419,74"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="257,137,353,163"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="432,92,343,134,340,129,429,87"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="377,137,432,163"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="473,91,429,130,426,126,469,87"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="457,137,577,163"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="519,89,519,124,514,124,514,89"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="601,137,752,163"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="583,87,648,128,645,132,580,92"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="776,137,887,163"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="615,77,783,130,781,136,613,82"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="911,137,1061,163"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="614,67,920,132,919,137,613,72"/>
+<area shape="rect" id="Node000011" href="$display_8h.html" title=" " alt="" coords="1085,137,1164,163"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="614,60,821,91,1072,134,1071,140,820,96,613,65"/>
+<area shape="rect" id="Node000012" href="$rfid_8h.html" title=" " alt="" coords="1188,137,1243,163"/>
+<area shape="poly" id="edge12_Node000001_Node000012" title=" " alt="" coords="614,54,865,83,1018,106,1175,135,1174,140,1017,111,864,88,613,60"/>
+<area shape="poly" id="edge11_Node000011_Node000002" title=" " alt="" coords="1085,163,1075,165,945,185,816,200,612,220,611,215,816,195,944,179,1074,160,1084,158"/>
+</map>

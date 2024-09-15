@@ -1,0 +1,9 @@
+<map id="showColor" name="showColor">
+<area shape="rect" id="Node000001" title="Shows a single color on the NeoPixel strip." alt="" coords="471,5,561,31"/>
+<area shape="rect" id="Node000002" href="$group__neopixel.html#gaec32c019df4f36a4c3774c2a777691fe" title="Displays a sequence of colors on the NeoPixel strip." alt="" coords="269,5,423,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="457,21,423,21,423,15,457,15"/>
+<area shape="rect" id="Node000003" href="$group__mqtt.html#ga6f06b273defaebb581fdf1adc8969f40" title="Callback function that handles incoming MQTT messages." alt="" coords="112,5,221,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="256,21,222,21,222,15,256,15"/>
+<area shape="rect" id="Node000004" href="$group__hardware.html#ga4fc01d736fe50cf5b977f755b675f11d" title="Initializes the game&#45;related hardware and settings." alt="" coords="5,5,64,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="98,21,64,21,64,15,98,15"/>
+</map>
