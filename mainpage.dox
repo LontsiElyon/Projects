@@ -1,0 +1,179 @@
+/**
+ * @mainpage Simon Goes Multiplayer - Product Development Plan
+ *
+ * @section overview 1. Product Overview
+ * "Simon Goes Multiplayer" is a modern adaptation of the classic Simon game, designed for multiple players. The product consists of physical controllers, a backend server, and a frontend interface, allowing players to compete in real-time memory challenges.
+ *
+ *
+ * @section timeline Development Timeline
+ * - Start Date: July 17, 2024
+ * - End Date: September 15, 2024
+ *
+ * @section components 3. Product Components
+ * @subsection hardware 3.1 Hardware Controllers
+ * @subsection ESP32 Microcontroller
+ * The ESP32 microcontroller is programmed to implement the Simon game. It sends game data via MQTT to the MQTT broker, which then forwards it to the backend application.
+ *
+ * Key Files:
+ * - **main.cpp**: The main program file for the ESP32 microcontroller.
+ *
+ * @subsection backend 3.2 Backend Server
+ * The backend is a Java application built using Vert.x, a toolkit for building reactive applications on the JVM. It exposes a REST API to interact with the Simon game data stored in the MariaDB database.
+ *
+ * Key Components:
+ * - **MainVerticle.java**: The main entry point of the backend application.
+ * - **ObjectController.java**: Handles HTTP requests and routes them to the appropriate service.
+ * - **ObjectService.java**: Contains the business logic for handling the Simon game data.
+ * - **ObjectRepository.java**: Interacts with the MariaDB database to perform CRUD operations.
+ *
+ * @subsection frontend 3.3 Frontend Interface
+ * The frontend is a simple web application built with plain HTML,Javascript and Bootstrap for styling. It interacts with the backend via AJAX requests to perform CRUD operations on the Simon game data.
+ *
+ * Key Files:
+ * - **index.html**: The main HTML file for the frontend.
+ * - **styles.css**: Custom CSS styles for the frontend.
+ * - **app.js**: JavaScript for interacting with the backend via REST and WebSockets.
+ *
+ * @subsection database 3.4 Database
+ * Relational database management system to store information about controllers, players, sessions, RFID reads, frontend assignments, and display updates.
+ *
+ * Key File:
+ *- **schema.sql**: The Database file for storing Informations.
+ *
+ * @section process 4. Development Process
+ * @subsection week1 Week 1: Planning and Initial Setup
+ * 
+ * - Requirement analysis and product specification
+ * - Setup of development environment and version control
+ * - Initial hardware design sketching @image html ControllerDesign.jpeg "Controller Design"
+ * - Research on RFID technology for player login
+ *
+ * @subsection week2 Week 2: Core Development
+ *
+ * - Hardware prototype assembly
+ * - RFID integration into controller design
+ * - Basic backend structure creation
+ * - Database schema design 
+ *
+ * @subsection week3 Week 3: Core Game Logic and Frontend Basics
+ *
+ * - Implementation of core game logic on ESP32
+ * - Development of basic user interface
+ * - Initial frontend structure using React
+ * - Start of WebSocket implementation for real-time communication
+ *
+ * @subsection week4 Week 4: Integration and Multiplayer Features
+ *
+ * - Hardware-software integration
+ * - Continuation of WebSocket implementation
+ * - Development of multiplayer functionality
+ * - Creation of player authentication system (RFID and web-based)
+ *
+ * @subsection week5 Week 5: Advanced Features and Initial Testing
+ *
+ * - Implementation of scalable difficulty
+ * - Development of game and round result displays
+ * - Begin system-wide integration testing
+ * - Start of performance optimization
+ *
+ * @subsection week6 Week 6: Refinement and Testing
+ *
+ * - Continuation of system-wide integration testing
+ * - Bug fixing and further performance optimization
+ * - Security implementation and testing
+ * - Preparation for user acceptance testing
+ *
+ * @subsection RemainingTime RemainingTime: Final Polish and Documentation
+ *
+ * - Conduct user acceptance testing
+ * - Address feedback from testing
+ * - Final bug fixes and optimizations
+ * - Final product presentation 
+ * - Documentation creation
+ *
+ * @section decisions 5. Design Decisions
+ * @subsection controller 5.1 Controller Design
+ *
+ * - Decision: Use of RFID for player login
+ * - Rationale: Provides quick and unique player identification, enhancing user experience
+ *
+ * @subsection backend_arch 5.2 Backend Architecture
+ *
+ * - Decision: Implementation of WebSocket for real-time communication
+ * - Rationale: Enables low-latency, bidirectional communication essential for multiplayer gameplay
+ *
+ * @subsection frontend_frame 5.3 Frontend Framework
+ *
+ * - Decision: Utilization of React for the user interface
+ * - Rationale: Offers component-based architecture, facilitating modular and maintainable code
+ *
+ * @subsection database_choice 5.4 Database Choice
+ *
+ * - Decision: Use of MariaDB for data storage
+ * - Rationale: Provides robust relational database capabilities with good performance characteristics
+ *
+ * @section testing 6. Testing Strategy
+ * @subsection unit 6.1 Unit Testing
+ *
+ * - Implementation of unit tests for critical backend functions (e.g., game logic, scoring system)
+ * - Use of Jest for JavaScript/TypeScript testing
+ *
+ * @subsection integration 6.2 Integration Testing
+ *
+ * - Development of integration tests to verify communication between controllers, backend, and frontend
+ * - Testing of database operations and data integrity
+ *
+ * @subsection uat 6.3 User Acceptance Testing
+ *
+ * - Conduct of playtesting sessions to gather feedback on game mechanics and user interface
+ * - Iteration based on user feedback to improve game experience
+ *
+ * @subsection performance 6.4 Performance Testing
+ *
+ * - Execution of load tests to ensure system can handle multiple concurrent games
+ * - Measurement and optimization of response times for critical operations
+ *
+ * @subsection security 6.5 Security Testing
+ *
+ * - Implementation of tests to verify protection against SQL injection
+ * - Verification of secure communication between all system components
+ *
+ * @section features 7. Key Product Features
+ * @subsection multiplayer 7.1 Multiplayer Functionality
+ *
+ * - Real-time gameplay for multiple players
+ * - Synchronization of game state across all connected devices
+ *
+ * @subsection auth 7.2 Player Authentication
+ *
+ * - RFID-based login for physical controllers
+ * - Traditional login system for web-based play
+ *
+ * @subsection difficulty 7.3 Scalable Difficulty
+ *
+ * - Incrementally challenging sequences as the game progresses
+ * 
+ *
+ * @subsection feedback 7.4 Real-time Feedback
+ *
+ * - Immediate visual and auditory feedback on player actions
+ * - Live updating of scores and game status
+ *
+ * @subsection persistence 7.5 Data Persistence
+ *
+ * - Storage of player profiles and high scores
+ * - Ability to resume interrupted games
+ *
+ * @section challenges 8. Challenges and Solutions
+ * @subsection latency 8.1 Challenge: Controller ClientID
+ * - Problem: When Programming the Products ESP32Controller all the Controllers had thesame ClientID which made it impossible for several Controllers to be connected at thesame time. 
+ * - Solution: Updating the main.cpp making it possible for each Controller to generate it's own ClientID.
+ * @subsection integration_challenge 8.2 Challenge: Controller-Player connect
+ * - Problem: Many players could connect to just one Controller which is not normal because one Controller was to be allocated to a Player.
+ * - Solution: Enhancing our Server to verify in the Database if a connected controller is not in use brfore connecting it to a Player.
+ * @subsection network 8.3 Challenge: Handling varying network conditions
+ * - Problem: Due to network reasons a Controller could disconnect from the Server during the Game Process.
+ * - Solution: Implementation of a reconnection mechanism and game state synchronization protocol
+ *
+ * This product development plan provides a comprehensive overview of the "Simon Goes Multiplayer" project, including the development process, key design decisions, testing strategies, and product features. It serves as a roadmap for the product's creation and a reference for understanding the choices made during development.
+ */
