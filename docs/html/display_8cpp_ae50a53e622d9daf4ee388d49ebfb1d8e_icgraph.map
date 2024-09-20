@@ -1,0 +1,27 @@
+<map id="display" name="display">
+<area shape="rect" id="Node000001" title=" " alt="" coords="532,132,601,157"/>
+<area shape="rect" id="Node000002" href="$display_8cpp.html#afaa5f070126ac5184a648b484e7cf276" title=" " alt="" coords="334,5,437,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="548,122,520,86,482,52,460,40,436,31,438,26,462,35,486,48,524,82,552,119"/>
+<area shape="rect" id="Node000003" href="$display_8cpp.html#a24f32464259d6179e4580f2afe5112aa" title="Displays a game over message on the OLED screen." alt="" coords="287,205,484,231"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="538,168,485,196,451,208,450,203,483,192,535,163"/>
+<area shape="rect" id="Node000006" href="$display_8cpp.html#a4ae4c7dfad3931d2ffbe03503498dce2" title="Displays a loss message on the OLED screen." alt="" coords="307,255,463,280"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="553,171,525,210,507,229,485,246,462,257,459,252,483,241,503,225,521,206,549,168"/>
+<area shape="rect" id="Node000009" href="$display_8cpp.html#a0680fa0c3c1dce2af5bf36b9584a3736" title="Displays player information on the OLED screen." alt="" coords="318,107,453,132"/>
+<area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="518,141,452,131,453,126,519,135"/>
+<area shape="rect" id="Node000010" href="$display_8cpp.html#a3533a6f04780d5ed82d704bf39cebb69" title=" " alt="" coords="112,81,239,107"/>
+<area shape="poly" id="edge11_Node000001_Node000010" title=" " alt="" coords="538,126,512,109,483,97,419,84,354,80,292,82,239,87,238,82,292,76,354,75,420,79,485,91,515,104,541,121"/>
+<area shape="rect" id="Node000011" href="$display_8cpp.html#ae20844acf4d9b99cb81ac95c6616ad0c" title="Starts the countdown for the next game round." alt="" coords="323,156,448,181"/>
+<area shape="poly" id="edge13_Node000001_Node000011" title=" " alt="" coords="519,154,449,163,448,158,518,148"/>
+<area shape="rect" id="Node000004" href="$group__mqtt.html#ga6f06b273defaebb581fdf1adc8969f40" title="Callback function that handles incoming MQTT messages." alt="" coords="121,156,230,181"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="317,205,230,184,231,179,318,200"/>
+<area shape="rect" id="Node000005" href="$group__hardware.html#ga4fc01d736fe50cf5b977f755b675f11d" title="Initializes the game&#45;related hardware and settings." alt="" coords="5,132,64,157"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="107,160,64,152,65,147,108,154"/>
+<area shape="poly" id="edge8_Node000006_Node000004" title=" " alt="" coords="304,253,286,246,231,215,190,184,193,179,234,210,288,241,306,248"/>
+<area shape="rect" id="Node000007" href="$main_8cpp.html#a9f1c87c7296779c4c895ca2b13ad2e3e" title="Handles the sequence of button inputs from players." alt="" coords="146,255,205,280"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="293,270,205,270,205,265,293,265"/>
+<area shape="rect" id="Node000008" href="$main_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title="Main loop of the program, handles MQTT connection, game logic, and RFID checking." alt="" coords="9,255,60,280"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="132,270,60,270,60,265,132,265"/>
+<area shape="poly" id="edge10_Node000009_Node000004" title=" " alt="" coords="318,138,231,159,230,153,317,133"/>
+<area shape="poly" id="edge12_Node000010_Node000005" title=" " alt="" coords="127,114,65,137,63,132,125,109"/>
+<area shape="poly" id="edge14_Node000011_Node000004" title=" " alt="" coords="309,171,230,171,230,166,309,166"/>
+</map>

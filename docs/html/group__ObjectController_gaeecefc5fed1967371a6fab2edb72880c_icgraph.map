@@ -1,0 +1,5 @@
+<map id="com.example.controller.ObjectController.sendNextSequence" name="com.example.controller.ObjectController.sendNextSequence">
+<area shape="rect" id="Node000001" title="Sends the next color sequence to the list of controllers." alt="" coords="309,5,532,45"/>
+<area shape="rect" id="Node000002" href="$group__ObjectController.html#gab636e581cc671a10d33af23559e4d715" title="Handles the generation of a color sequence for a game." alt="" coords="5,5,261,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="296,28,262,28,262,23,296,23"/>
+</map>

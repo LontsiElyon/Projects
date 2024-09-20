@@ -1,0 +1,5 @@
+<map id="showColorSequence" name="showColorSequence">
+<area shape="rect" id="Node000001" title="Displays a sequence of colors on the NeoPixel strip." alt="" coords="5,5,159,31"/>
+<area shape="rect" id="Node000002" href="$group__neopixel.html#ga416175caed957c9440e5b23a17351ec2" title="Shows a single color on the NeoPixel strip." alt="" coords="207,5,297,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="159,15,193,15,193,21,159,21"/>
+</map>

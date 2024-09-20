@@ -1,1 +1,81 @@
-/* CSS File to style the Frontend */
+/**
+ * @file styles.css
+ * @brief CSS File to style the Frontend
+ * @details This file contains the styles for the frontend of the application, including styling for the body, containers, and game-related elements.
+ */
+
+/**
+ * @brief General body styling
+ * @details Sets the background color and font for the entire page.
+ */
+body {
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+}
+/**
+ * @brief Styling for the main container
+ * @details Sets a max-width for the content to ensure it's centered and constrained within 800px.
+ */
+.container {
+    max-width: 800px;
+}
+
+/**
+ * @brief Styling for login, game start, and game info sections
+ * @details Adds background color, padding, rounded corners, and shadow effect to the sections.
+ */
+#player-login, #game-start, #game-info {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/**
+ * @brief Center text alignment for game info section.
+ */
+#game-info {
+    text-align: center;
+}
+/**
+ * @brief Styling for player information section
+ * @details Displays the player info in a flexbox layout, with spacing between items, background color, and rounded corners.
+ */
+.player-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+}
+/**
+ * @brief Bold styling for player info text.
+ */
+.player-info span {
+    font-weight: bold;
+}
+/**
+ * @brief Styling for login result alerts
+ * @details Adds margin to the top of alert messages in the login result area.
+ */
+#login-result .alert {
+    margin-top: 10px;
+}
+/**
+ * @brief General button styling
+ * @details Makes the button text bold and uppercase for emphasis.
+ */
+.btn {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+/**
+ * @brief Heading styling
+ * @details Sets the font size and color for headings.
+ */
+h2 {
+    font-size: 1.5rem;
+    color: #333;
+}

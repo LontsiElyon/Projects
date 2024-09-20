@@ -1,0 +1,5 @@
+<map id="connectMQTT" name="connectMQTT">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,116,31"/>
+<area shape="rect" id="Node000002" href="$group__mqtt.html#gafafdfb4cc61192624f783873542e1d9c" title="Initializes and publishes the controller ID to the MQTT server." alt="" coords="164,5,319,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="116,15,150,15,150,21,116,21"/>
+</map>

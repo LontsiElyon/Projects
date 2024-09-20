@@ -1,0 +1,33 @@
+<map id="setup" name="setup">
+<area shape="rect" id="Node000001" title="Initializes the game&#45;related hardware and settings." alt="" coords="5,184,64,209"/>
+<area shape="rect" id="Node000002" href="$display_8cpp.html#a3533a6f04780d5ed82d704bf39cebb69" title=" " alt="" coords="112,34,239,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="46,182,151,68,155,72,50,185"/>
+<area shape="rect" id="Node000004" href="$group__mqtt.html#ga6f06b273defaebb581fdf1adc8969f40" title="Callback function that handles incoming MQTT messages." alt="" coords="121,158,230,184"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="64,188,107,181,108,186,65,194"/>
+<area shape="rect" id="Node000013" href="$rfid_8cpp.html#a4b4188dd9c3e033242c2c976ddb28e7f" title="Connects the ESP32 to the specified Wi&#45;Fi network." alt="" coords="132,208,219,233"/>
+<area shape="poly" id="edge16_Node000001_Node000013" title=" " alt="" coords="65,199,119,208,118,213,64,204"/>
+<area shape="rect" id="Node000014" href="$group__config.html#gae5b88d967e3185d98053cf055c8b4f1f" title="Connects the ESP32 to the specified Wi&#45;Fi network." alt="" coords="131,257,219,282"/>
+<area shape="poly" id="edge17_Node000001_Node000014" title=" " alt="" coords="56,207,113,242,128,249,126,254,111,247,53,211"/>
+<area shape="rect" id="Node000003" href="$display_8cpp.html#ae50a53e622d9daf4ee388d49ebfb1d8e" title=" " alt="" coords="543,84,612,109"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="213,32,267,17,336,6,411,4,449,9,485,19,526,42,558,71,554,75,523,46,483,24,448,15,411,10,337,11,269,23,215,37"/>
+<area shape="rect" id="Node000005" href="$display_8cpp.html#a24f32464259d6179e4580f2afe5112aa" title="Displays a game over message on the OLED screen." alt="" coords="287,34,484,60"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="185,156,226,113,254,89,285,69,300,62,302,67,288,73,257,93,229,117,189,160"/>
+<area shape="rect" id="Node000006" href="$display_8cpp.html#a4ae4c7dfad3931d2ffbe03503498dce2" title="Displays a loss message on the OLED screen." alt="" coords="307,84,463,109"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="200,156,286,118,311,110,312,115,288,123,202,160"/>
+<area shape="rect" id="Node000007" href="$display_8cpp.html#a0680fa0c3c1dce2af5bf36b9584a3736" title="Displays player information on the OLED screen." alt="" coords="318,133,453,158"/>
+<area shape="poly" id="edge8_Node000004_Node000007" title=" " alt="" coords="230,162,304,153,305,158,230,167"/>
+<area shape="rect" id="Node000008" href="$main_8cpp.html#aca0a1a403470ed5db1d66d4e4f723c91" title="Handles game start and input windows for color sequences." alt="" coords="305,182,466,208"/>
+<area shape="poly" id="edge10_Node000004_Node000008" title=" " alt="" coords="230,174,291,181,291,187,230,180"/>
+<area shape="rect" id="Node000009" href="$main_8cpp.html#aa29707d0f185cc5ab5f3b3245ec7971f" title="Requests the next color sequence for the game." alt="" coords="303,232,468,257"/>
+<area shape="poly" id="edge11_Node000004_Node000009" title=" " alt="" coords="213,181,240,192,288,216,314,225,313,230,286,221,238,197,211,186"/>
+<area shape="rect" id="Node000010" href="$group__neopixel.html#gaec32c019df4f36a4c3774c2a777691fe" title="Displays a sequence of colors on the NeoPixel strip." alt="" coords="309,330,462,356"/>
+<area shape="poly" id="edge12_Node000004_Node000010" title=" " alt="" coords="224,181,241,193,253,209,260,225,264,257,269,287,276,301,288,316,298,323,295,327,285,320,272,304,264,289,259,258,255,227,249,212,237,197,221,186"/>
+<area shape="rect" id="Node000012" href="$display_8cpp.html#ae20844acf4d9b99cb81ac95c6616ad0c" title="Starts the countdown for the next game round." alt="" coords="323,281,448,306"/>
+<area shape="poly" id="edge14_Node000004_Node000012" title=" " alt="" coords="221,181,240,193,257,212,265,231,272,249,288,266,311,278,308,283,285,270,268,252,260,233,252,215,237,197,219,186"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="440,57,485,68,530,80,528,86,483,73,439,62"/>
+<area shape="poly" id="edge7_Node000006_Node000003" title=" " alt="" coords="464,94,529,94,529,99,464,99"/>
+<area shape="poly" id="edge9_Node000007_Node000003" title=" " alt="" coords="435,130,483,118,528,106,530,111,485,123,436,135"/>
+<area shape="rect" id="Node000011" href="$group__neopixel.html#ga416175caed957c9440e5b23a17351ec2" title="Shows a single color on the NeoPixel strip." alt="" coords="532,330,623,356"/>
+<area shape="poly" id="edge13_Node000010_Node000011" title=" " alt="" coords="462,340,518,340,518,346,462,346"/>
+<area shape="poly" id="edge15_Node000012_Node000003" title=" " alt="" coords="447,283,466,276,482,266,514,233,538,194,555,155,567,122,572,124,560,157,543,197,518,237,486,270,468,281,449,288"/>
+</map>
